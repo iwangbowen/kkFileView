@@ -101,8 +101,8 @@ cd server && mvn spring-boot:run
 mvn clean package
 
 # 生成两个发行版：
-# - server/target/kkFileView-4.4.1-win32.zip（包含 LibreOffice Portable）
-# - server/target/kkFileView-4.4.1-linux.tar.gz（自动安装 LibreOffice）
+# - server/target/kkFileView-4.4.2-win32.zip（包含 LibreOffice Portable）
+# - server/target/kkFileView-4.4.2-linux.tar.gz（自动安装 LibreOffice）
 ```
 
 ### Docker
@@ -213,7 +213,7 @@ GET /getCorsFile?urlPath={base64_encoded_url} - CORS 代理
 ls -la /opt/libreoffice*/program/soffice.bin
 
 # 监控转换日志
-tail -f server/target/kkFileView-4.4.1/log/kkFileView.log
+tail -f server/target/kkFileView-4.4.2/log/kkFileView.log
 
 # 强制重建缓存
 curl "http://localhost:8012/onlinePreview?url={url}&forceUpdatedCache=true"
