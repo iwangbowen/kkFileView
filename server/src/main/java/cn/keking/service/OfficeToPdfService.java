@@ -196,10 +196,12 @@ public class OfficeToPdfService {
             return null;
         }
         String suffix = fileAttribute.getSuffix().toLowerCase(Locale.ROOT);
-        if (!"docx".equals(suffix)) {
-            return null;
+        if ("docx".equals(suffix)) {
+            return OfficeToPdfService.removeDocxComments(original);
+        } else if ("doc".equals(suffix)) {
+            return OfficeToPdfService.removeDocComments(original);
         }
-        return OfficeToPdfService.removeDocxComments(original);
+        return null;
     }
 
     private static File removeDocxComments(File sourceFile) throws IOException {
@@ -260,6 +262,72 @@ public class OfficeToPdfService {
             buffer.write(data, 0, read);
         }
         return buffer.toByteArray();
+    }
+
+    /**
+     * 移除 .doc 格式文件中的批注和修订
+     * DOC 格式为二进制结构,转换策略:
+     * 1. 先转换 DOC -> DOCX (使用 LibreOffice)
+     * 2. 然后移除 DOCX 中的批注
+     * 3. 最后返回清理后的 DOCX 文件
+     */
+    private static File removeDocComments(File sourceFile) throws IOException {
+        Path tempDocx = null;
+        Path tempTarget = null;
+        try {
+            // 第一步:DOC -> DOCX 转换
+            tempDocx = Files.createTempFile("kkfileview-doc-to-docx-", ".docx");
+            OfficeToPdfService.logger.info("正在将 DOC 转换为 DOCX 以便移除批注: {}", sourceFile.getName());
+
+            try {
+                LocalConverter.builder()
+                    .build()
+                    .convert(sourceFile)
+                    .to(tempDocx.toFile())
+                    .execute();
+            } catch (OfficeException e) {
+                throw new IOException("无法将 DOC 转换为 DOCX: " + e.getMessage(), e);
+            }
+
+            // 第二步:移除 DOCX 中的批注
+            tempTarget = Files.createTempFile("kkfileview-clean-", ".docx");
+            try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(tempDocx.toFile())));
+                 ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(tempTarget.toFile())))) {
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    String entryName = entry.getName();
+                    boolean shouldCopy = entryName != null && !(entryName.startsWith("word/") && entryName.contains("comments"));
+                    if (shouldCopy) {
+                        OfficeToPdfService.copyEntryWithoutComments(entry, entryName, zis, zos);
+                    }
+                    zis.closeEntry();
+                }
+            }
+
+            OfficeToPdfService.logger.info("已从 DOC 创建不含批注的 DOCX 副本: {}", tempTarget);
+            return tempTarget.toFile();
+
+        } catch (Exception e) {
+            // 清理临时文件
+            if (tempTarget != null) {
+                try {
+                    Files.deleteIfExists(tempTarget);
+                } catch (IOException deleteEx) {
+                    e.addSuppressed(deleteEx);
+                }
+            }
+            OfficeToPdfService.logger.warn("无法移除 DOC 批注,将依赖 LibreOffice 重试: {}", e.getMessage());
+            return null;
+        } finally {
+            // 清理中间 DOCX 文件
+            if (tempDocx != null) {
+                try {
+                    Files.deleteIfExists(tempDocx);
+                } catch (IOException ignored) {
+                    // 忽略清理失败
+                }
+            }
+        }
     }
 
 }
