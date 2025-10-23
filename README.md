@@ -1,191 +1,450 @@
 # kkFileView
+文档在线预览项目解决方案，项目使用流行的spring boot搭建，易上手和部署。万能的文件预览开源项目，基本支持主流文档格式预览，如：
+1. 支持 doc, docx, xls, xlsx, xlsm, ppt, pptx, csv, tsv, dotm, xlt, xltm, dot, dotx,xlam, xla ,pages 等 Office 办公文档
+2. 支持 wps, dps, et, ett, wpt 等国产 WPS Office 办公文档
+3. 支持 odt, ods, ots, odp, otp, six, ott, fodt, fods 等OpenOffice、LibreOffice 办公文档
+4. 支持 vsd, vsdx 等 Visio 流程图文件
+5. 支持 wmf, emf 等 Windows 系统图像文件
+6. 支持 psd ,eps 等 Photoshop 软件模型文件
+7. 支持 pdf ,ofd, rtf 等文档
+8. 支持 xmind 软件模型文件
+9. 支持 bpmn 工作流文件
+10. 支持 eml 邮件文件
+11. 支持 epub 图书文档
+12. 支持 obj, 3ds, stl, ply, gltf, glb, off, 3dm, fbx, dae, wrl, 3mf, ifc, brep, step, iges, fcstd, bim 等 3D 模型文件
+13. 支持 dwg, dxf, dwf, iges , igs, dwt, dng, ifc, dwfx, stl, cf2, plt 等 CAD 模型文件
+14. 支持 txt, xml(渲染), xbrl(渲染), md(渲染), java, php, py, js, css 等所有纯文本
+15. 支持 zip, rar, jar, tar, gzip, 7z 等压缩包
+16. 支持 jpg, jpeg, png, gif, bmp, ico, jfif, webp 等图片预览（翻转，缩放，镜像）
+17. 支持 tif, tiff 图信息模型文件
+18. 支持 tga 图像格式文件
+19. 支持 svg 矢量图像格式文件
+20. 支持 mp3,wav,mp4,flv 等音视频格式文件
+21. 支持 avi,mov,rm,webm,ts,rm,mkv,mpeg,ogg,mpg,rmvb,wmv,3gp,ts,swf 等视频格式转码预览
+22. 支持 dcm 等医疗数位影像预览
+23. 支持 drawio 绘图预览
 
-### Introduction
+## 本分支特别说明
 
-Document online preview project solution, built using the popular Spring Boot framework for easy setup and deployment. This versatile open source project provides basic support for a wide range of document formats, including:
+本分支用于解决LibreOffice版本造成的[预览问题](https://github.com/kekingcn/kkFileView/issues/596)。
 
-1. Supports Office documents such as `doc`, `docx`, `xls`, `xlsx`, `xlsm`, `ppt`, `pptx`, `csv`, `tsv`, , `dotm`, `xlt`, `xltm`, `dot`, `xlam`, `dotx`, `xla,` ,`pages` etc.
-2. Supports domestic WPS Office documents such as `wps`, `dps`, `et` , `ett`, ` wpt`.
-3. Supports OpenOffice, LibreOffice office documents such as `odt`, `ods`, `ots`, `odp`, `otp`, `six`, `ott`, `fodt` and `fods`.
-4. Supports Visio flowchart files such as `vsd`, `vsdx`.
-5. Supports Windows system image files such as `wmf`, `emf`.
-6. Supports Photoshop software model files such as `psd` ,`eps`.
-7. Supports document formats like `pdf`, `ofd`, and `rtf`.
-8. Supports software model files like `xmind`. 
-9. Support for `bpmn` workflow files.
-10. Support for `eml` mail files
-11. Support for `epub` book documents
-12. Supports 3D model files like `obj`, `3ds`, `stl`, `ply`, `gltf`, `glb`, `off`, `3dm`, `fbx`, `dae`, `wrl`, `3mf`, `ifc`, `brep`, `step`, `iges`, `fcstd`, `bim`, etc.
-13. Supports CAD model files such as `dwg`, `dxf`, `dwf`  `iges` ,` igs`, `dwt` , `dng` , `ifc` , `dwfx` , `stl` , `cf2` , `plt`, etc.
-14. Supports all plain text files such as `txt`, `xml` (rendering), `md` (rendering), `java`, `php`, `py`, `js`, `css`, etc.
-15. Supports compressed packages such as `zip`, `rar`, `jar`, `tar`, `gzip`, `7z`, etc.
-16. Supports image previewing (flip, zoom, mirror) of `jpg`, `jpeg`, `png`, `gif`, `bmp`, `ico`, `jfif`, `webp`, etc.
-17. Supports image information model files such as `tif` and `tiff`.
-18. Supports image format files such as `tga`.
-19. Supports vector image format files such as `svg`.
-20. Supports `mp3`,`wav`,`mp4`,`flv` .
-21. Supports many audio and video format files such as `avi`, `mov`, `wmv`, `mkv`, `3gp`, and `rm`.
-22. Supports for `dcm` .
-23. Supports for `drawio` .
+```bash
+# 构建kkfileview-base镜像
+cd docker/kkfileview-base
+docker build -t kkfileview-base:latest .
 
-### Features
-- Build with the popular frame spring boot
-- Easy to build and deploy
-- Basically support online preview of mainstream office documents, such as Doc, docx, Excel, PDF, TXT, zip, rar, pictures, etc
-- REST API
-- Abstract file preview interface so that it is easy to extend more file extensions and develop this project on your own
+# 构建jar文件
+cd server
+mvn clean package -DskipTests
 
-### Official website and DOCS
+# 在项目根目录构建kkfileview镜像
+docker build -t kkfileview:4.4.2 .
 
-URL：[https://kkview.cn](https://kkview.cn/)
+# 上传到docker hub
+docker tag kkfileview:4.4.2 wangbowen/kkfileview:4.4.2
+docker push wangbowen/kkfileview:4.4.2
+```
 
-### Live demo
-> Please treat public service kindly, or this would stop at any time.
+> 基于当前良好的架构模式，支持的文件类型在进一步丰富中
+### 项目特性
 
-URL：[https://file.kkview.cn](https://file.kkview.cn)
+- 使用 spring-boot 开发，预览服务搭建部署非常简便
+- rest 接口提供服务，跨语言、跨平台特性(java,php,python,go,php，....)都支持，应用接入简单方便
+- 抽象预览服务接口，方便二次开发，非常方便添加其他类型文件预览支持
+- 最最重要 Apache 协议开源，代码 pull 下来想干嘛就干嘛
 
-### Contact Us
-> We will answer your questions carefully and solve any problems you encounter while using the project. We also kindly ask that you at least Google or Baidu before asking questions in order to save time and avoid ineffective communication. Let's cherish our lives and stay away from ineffective communication.
+### 官网及文档
 
-<img src="./doc/github星球.png/" width="50%">
+地址：[https://kkview.cn](https://kkview.cn/)
 
-### Quick Start
-> Technology stack
-- Spring boot： [spring boot Development Reference Guide](http://www.kailing.pub/PdfReader/web/viewer.html?file=springboot)
-- Freemarker
-- Redisson 
-- Jodconverter
-> Dependencies
-- Redis(Optional, Unnecessary by default)
-- OpenOffice or LibreOffice(Integrated on Windows, will be installed automatically on Linux, need to be manually installed on Mac OS)
+### 在线体验
+> 请善待公共服务，会不定时停用
 
-1. First step：`git pull https://github.com/kekingcn/kkFileView.git`
+地址：[https://file.kkview.cn](https://file.kkview.cn)
 
-2. second step：Run the main method of `/server/src/main/java/cn/keking/ServerMain.java`. After starting,visit `http://localhost:8012/`.
+### 项目文档（Project documentation）
+1. 详细使用文档：https://kkview.cn/zh-cn/docs/home.html
 
-### Changelog
-> December 14, 2022, version 4.1.0 released:
+### 联系我们，加入组织
+> 我们会用心回答解决大家在项目使用中的问题，也请大家在提问前至少 Google 或 baidu 过，珍爱生命远离无效的交流沟通
 
-1. Updated homepage design by @wsd7747.
-2. Compatible with multipage tif for pdf and jpg conversion and multiple page online preview for tif image preview by @zhangzhen1979.
-3. Optimized docker build, using layered build method by @yl-yue.
-4. Implemented file encryption based on userToken cache by @yl-yue.
-5. Implemented preview for encrypted Word, PPT, and Excel files by @yl-yue.
-6. Upgraded Linux & Docker images to LibreOffice 7.3.
-7. Updated OFD preview component, tif preview component, and added support for PPT watermarking.
-8. Numerous other upgrades, optimizations, and bug fixes.
-We thank @yl-yue, @wsd7747, @zhangzhen1979, @tomhusky, @shenghuadun, and @kischn.sun for their code contributions.
+<img src="./doc/gitee星球.png/" width="60%">
+
+### 文档预览效果
+#### 1. 文本预览
+支持所有类型的文本文档预览， 由于文本文档类型过多，无法全部枚举，默认开启的类型如下 txt,html,htm,asp,jsp,xml,xbrl,json,properties,md,gitignore,log,java,py,c,cpp,sql,sh,bat,m,bas,prg,cmd
+文本预览效果如下
+![文本预览效果如下](./doc/img/preview/preview-text.png)
+
+#### 2. 图片预览
+支持jpg，jpeg，png，gif等图片预览（翻转，缩放，镜像），预览效果如下
+![图片预览](./doc/img/preview/preview-image.png)
+
+#### 3. word文档预览
+支持doc，docx文档预览，word预览有两种模式：一种是每页word转为图片预览，另一种是整个word文档转成pdf，再预览pdf。两种模式的适用场景如下
+* 图片预览：word文件大，前台加载整个pdf过慢
+* pdf预览：内网访问，加载pdf快
+图片预览模式预览效果如下
+![word文档预览1](./doc/img/preview/preview-doc-image.png)
+pdf预览模式预览效果如下
+![word文档预览2](./doc/img/preview/preview-doc-pdf.png)
+
+#### 4. ppt文档预览
+支持ppt，pptx文档预览，和word文档一样，有两种预览模式
+图片预览模式预览效果如下
+![ppt文档预览1](./doc/img/preview/preview-ppt-image.png)
+pdf预览模式预览效果如下
+![ppt文档预览2](./doc/img/preview/preview-ppt-pdf.png)
+
+#### 5. pdf文档预览
+支持pdf文档预览，和word文档一样，有两种预览模式
+图片预览模式预览效果如下
+![pdf文档预览1](./doc/img/preview/preview-pdf-image.png)
+pdf预览模式预览效果如下
+![pdf文档预览2](./doc/img/preview/preview-pdf-pdf.png)
+
+#### 6. excel文档预览
+支持xls，xlsx文档预览，预览效果如下
+![excel文档预览](./doc/img/preview/preview-xls.png)
+
+#### 7. 压缩文件预览
+支持zip,rar,jar,tar,gzip等压缩包，预览效果如下
+![压缩文件预览1](./doc/img/preview/preview-zip.png)
+可点击压缩包中的文件名，直接预览文件，预览效果如下
+![压缩文件预览2](./doc/img/preview/preview-zip-inner.png)
+
+#### 8. 多媒体文件预览
+理论上支持所有的视频、音频文件，由于无法枚举所有文件格式，默认开启的类型如下
+mp3,wav,mp4,flv
+视频预览效果如下
+![多媒体文件预览1](./doc/img/preview/preview-video.png)
+音频预览效果如下
+![多媒体文件预览2](./doc/img/preview/preview-audio.png)
+
+#### 9. CAD文档预览
+支持CAD dwg文档预览，和word文档一样，有两种预览模式
+图片预览模式预览效果如下
+![cad文档预览1](./doc/img/preview/preview-cad-image.png)
+pdf预览模式预览效果如下
+![cad文档预览2](./doc/img/preview/preview-cad-pdf.png)
+
+#### 10. Excel文件纯前端渲染效果
+
+![Excel文件纯前端渲染效果](./doc/img/preview/preview-xlsx-web.png)
+
+#### 11. 流程图bpmn文件预览效果
+
+![流程图bpmn文件预览效果](./doc/img/preview/preview-bpmn.png)
+
+#### 12. 3D模型文件预览效果：
+
+![3D模型文件预览效果](./doc/img/preview/preview-3ds.png)
+
+#### 13. dcm医疗数位影像文件预览效果：
+
+![dcm医疗数位影像文件预览效果](./doc/img/preview/preview-dcm.png)
+
+#### 14. drawio流程图预览效果：
+
+![drawio流程图预览效果](./doc/img/preview/preview-drawio.png)
+
+考虑说明篇幅原因，就不贴其他格式文件的预览效果了，感兴趣的可以参考下面的实例搭建下
+
+### 快速开始
+> 项目使用技术
+- spring boot： [spring boot开发参考指南](http://www.kailing.pub/PdfReader/web/viewer.html?file=springboot)
+- freemarker
+- redisson
+- jodconverter
+
+> 依赖外部环境
+- redis (可选，默认不用)
+- OpenOffice 或者 LibreOffice( Windows 下已内置，Linux 脚本启动模式会自动安装，Mac OS 下需要手动安装)
+
+1. 第一步：pull 项目 https://github.com/kekingcn/file-online-preview.git
+
+3. 第二步：运行 ServerMain 的 main 方法，服务启动后，访问 http://localhost:8012/
+会看到如下界面，代表服务启动成功
+
+![输入图片说明](https://gitee.com/uploads/images/2017/1213/100221_ea15202e_492218.png "屏幕截图.png")
+
+### 历史更新记录
+
+#### > 2025年01月16日，v4.4.0 版本发布 ：
+
+### 新增功能
+1. xlsx 新增支持打印功能
+2. 配置文件新增启用 GZIP 压缩
+3. CAD 格式新增支持转换成 SVG 和 TIF 格式，新增超时结束、线程管理
+4. 新增删除文件使用验证码校验
+5. 新增 xbrl 格式预览支持
+6. PDF 预览新增控制签名、绘图、插图控制、搜索定位页码、定义显示内容等功能
+7. 新增 CSV 格式前端解析支持
+8. 新增 ARM64 下的 Docker 镜像支持
+9. 新增 Office 预览支持转换超时属性设置功能
+10. 新增预览文件 host 黑名单机制
+
+### 优化
+1. 优化 OFD 移动端预览 页面不自适应
+2. 更新 xlsx 前端解析组件，加速解析速度
+3. 升级 CAD 组件
+4. office 功能调整，支持批注、转换页码限制、生成水印等功能
+5. 升级 markdown 组件
+6. 升级 dcm 解析组件
+7. 升级 PDF.JS 解析组件
+8. 更换视频播放插件为 ckplayer
+9. tif 解析更加智能化，支持被修改的图片格式
+10. 针对大小文本文件检测字符编码的正确率，处理并发隐患
+11. 重构下载文件的代码，新增通用的文件服务器认证访问的设计
+12. 更新 bootstrap 组件，并精简掉不需要的文件
+13. 更新 epub 版本，优化 epub 显示效果
+14. 解决定时清除缓存时，对于多媒体类型文件，只删除了磁盘缓存文件
+15. 自动检测已安装 Office 组件，增加 LibreOffice 7.5 & 7.6 版本默认路径
+16. 修改 drawio 默认为预览模式
+17. 新增 PDF 线程管理、超时管理、内存缓存管理，更新 PDF 解析组件版本
+18. 优化 Dockerfile，支持真正的跨平台构建镜像
+
+### 修复
+1. 修复 forceUpdatedCache 属性设置，但本地缓存文件不更新的问题
+2. 修复 PDF 解密加密文件转换成功后后台报错的问题
+3. 修复 BPMN 不支持跨域的问题
+4. 修复压缩包二级反代特殊符号错误问题
+5. 修复视频跨域配置导致视频无法预览的问题
+6. 修复 TXT 文本类分页二次加载问题
+7. 修复 Drawio 缺少 Base64 组件的问题
+8. 修复 Markdown 被转义问题
+9. 修复 EPUB 跨域报错问题
+10. 修复 URL 特殊符号问题
+11. 修复压缩包穿越漏洞
+12. 修复压缩获取路径错误、图片合集路径错误、水印问题等 BUG
+13. 修复前端解析 XLSX 包含 EMF 格式文件错误问题
+
+#### > 2023年07月05日，v4.3.0 版本发布 ：
+
+#### 新增功能:
+1. 新增dcm等医疗数位影像预
+2. 新增drawio绘图预览
+3. 新增开启缓存的情况下重新生成的命令 &forceUpdatedCache=true
+4. 新增dwg CAD文件预览
+5. 新增PDF文件支持密码功能
+6. 新增PDF文件生成图片的dpi自定义配置
+7. 新增删除转换后OFFICE、CAD、TIFF、压缩包源文件配置 默认开启 节约磁盘空间
+8. 新增前端解析xlsx方法
+9. 新增pages,eps, iges , igs, dwt, dng, ifc, dwfx, stl, cf2, plt等格式支持
+
+#### 优化:
+1. 调整生成的PDF文件 文件名称添加文件后缀 防止生成同名文件
+2. 调整SQL文件预览方式
+3. 优化OFD预览兼容性
+4. 美化TXT文本 分页框的显示
+5. 升级Linux、Docker版内置office为LibreOffice-7.5.3版本
+6. 升级Windows版内置office为LibreOffice-7.5.3 Portable版本
+7. 其他功能优化
+
+#### 修复:
+1. 修复反代情况下压缩包获取路径错误
+2. 修复预览图片的url中如果包含&会导致.click报错
+3. 修复OFD预览部分已知问题
+4. 修复预览压缩包时，如果点击的是文件目录（树节点），页面会报错
+5. 其他已知问题修复
+
+#### > 2023年04月18日，v4.2.1 版本发布 ：
+
+#### 更新日志:
+
+1. 修复 dwg 文件预览报空指针的 bug
+
+#### > 2023年04月13日，v4.2.0 版本发布 ：
+
+#### 新增功能:
+1. 新增 SVG 格式文件预览支持
+2. 新增加密的 Office 文件预览支持
+3. 新增加密的 zip、rar 等压缩包文件预览支持
+4. 新增 xmind 软件模型文件预览支持
+5. 新增 bpmn 工作流模型文件预览支持
+6. 新增 eml 邮件文件预览支持
+7. 新增 epub 电子书文件预览支持
+8. 新增 dotm,ett,xlt,xltm,wpt,dot,xlam,xla,dotx 等格式的办公文档预览支持
+9. 新增 obj, 3ds, stl, ply, gltf, glb, off, 3dm, fbx, dae, wrl, 3mf, ifc, brep, step, iges, fcstd, bim 等 3D 模型文件预览支持
+10. 新增可配置限制高风险文件上传的功能，比如 exe 文件
+11. 新增可配置站点的备案信息
+12. 新增演示站点删除文件需要密码的功能
+
+#### 优化:
+1. 文本文档预览加入缓存
+2. 美化 404、500 报错页
+3. 优化发票等 ofd 文件预览的印证渲染兼容性
+4. 移除 office-plugin 模块, 使用新版 jodconverter组件
+5. 优化 Excel 文件的预览效果
+6. 优化 CAD 文件的预览效果
+7. 更新 xstream 、junrar、pdfbox 等依赖的版本
+8. 更新 TIF 文件转换 PDF 的插件，添加转换缓存
+9. 优化演示页 UI 部署
+10. 压缩包文件预览支持目录
+
+#### 修复:
+1. 修复部分接口 XSS 问题
+2. 修复控制台打印的演示地址不跟着 content-path 配置走的问题
+3. 修复 ofd 文件预览跨域问题
+4. 修复内部自签证书 https 协议 url 文件无法下载的问题
+5. 修复特殊符号的文件无法删除的问题
+6. 修复 PDF 转图片,内存无法回收导致的 OOM
+7. 修复 xlsx7.4 以上版本文件预览乱码的问题
+8. 修复 TrustHostFilter 未拦截跨域接口的问题，这是一个安全问题，有使用到 TrustHost 功能的务必升级
+9. 修复压缩包文件预览在 Linux 系统下文件名乱码的问题
+10. 修复 ofd 文件预览页码只能显示10页的问题
+
+#### > 2022年12月14日，v4.1.0 版本发布 ：
+
+1. 全新首页视觉 @wsd7747
+2. tif图片预览兼容多页tif的pdf转换、jpg转换，以及jpg在线多页预览功能 @zhangzhen1979
+3. 优化docker构建方案，使用分层构建方式 @yl-yue
+4. 实现基于userToken缓存加密文件 @yl-yue
+5. 实现加密word、ppt、excel文件预览 @yl-yue
+6. Linux & Docker镜像升级LibreOffice 7.3
+7. 更新OFD预览组件、更新tif预览组件、更新PPT水印支持
+8. 大量其他升级优化 & 已知问题修复
+
+感谢 @yl-yue @wsd7747 @zhangzhen1979 @tomhusky @shenghuadun @kischn.sun 的代码贡献
+
+#### > 2021年7月6日，v4.0.0 版本发布 ：
+
+1. 底层集成OpenOffice替换为LibreOffice，Office文件兼容性增强，预览效果提升
+2. 修复压缩文件目录穿越漏洞
+3. 修复PPT预览使用PDF模式无效
+4. 修复PPT图片预览模式前端显示异常
+5. 新增功能：首页文件上传功能可通过配置实时开启或禁用
+6. 优化增加Office进程关闭日志
+7. 优化Windows环境下，查找Office组件逻辑(内置的LibreOffice优先)
+8. 优化启动Office进程改同步执行
+
+#### > 2021年6月17日，v3.6.0 版本发布 ：
+
+ofd 类型文件支持版本，本次版本重要功能均由社区开发贡献，感谢 @gaoxingzaq、@zhangxiaoxiao9527 的代码贡献
+1. 新增 ofd 类型文件预览支持，ofd 是国产的类似 pdf 格式的文件
+2. 新增了 ffmpeg 视频文件转码预览支持，打开转码功能后，理论上支持所有主流视频的预览，如 rm、rmvb、flv 等
+3. 美化了 ppt、pptx 类型文件预览效果，比之前版本好看太多
+4. 更新了 pdfbox、xstream、common-io 等依赖的版本
+
+#### > 2021年1月28日 ：
+
+2020农历年最后一个版本发布，主要包含了部分 UI 改进，和解决了 QQ 群友、 Issue 里反馈的 Bug 修复，最最重要的是发个新版，过个好年
+
+1. 引入galimatias,解决不规范文件名导致文件下载异常
+2. 更新index接入演示界面UI风格
+3. 更新markdown文件预览UI风格
+4. 更新XML文件预览UI风格，调整类文本预览架构，更方便扩展
+5. 更新simTxT文件预览UI风格
+6. 调整多图连续预览上下翻图的UI
+7. 采用apache-common-io包简化所有的文件下载io操作
+8. XML文件预览支持切换纯文本模式
+9. 增强url base64解码失败时的提示信息
+10. 修复导包错误以及图片预览 bug
+11. 修复发行包运行时找不到日志目录的问题
+12. 修复压缩包内多图连续预览的bug
+13. 修复大小写文件类型后缀没通用匹配的问题
+14. 指定Base64转码采用Apache Commons-code中的实现，修复base64部分jdk版本下出现的异常
+15. 修复类文本类型HTML文件预览的bug
+16. 修复：dwg文件预览时无法在jpg和pdf两种类型之间切换
+17. escaping of dangerous characters to prevent reflected xss
+18. 修复重复编码导致文档转图片预览失败的问题&编码规范
+
+#### > 2020年12月27日 ：
+
+2020年年终大版本更新，架构全面设计，代码全面重构，代码质量全面提升，二次开发更便捷，欢迎拉源码品鉴，提issue、pr共同建设
+
+1. 架构模块调整,大量的代码重构，代码质量提升N个等级，欢迎品鉴
+2. 增强XML文件预览效果，新增XML文档数结构预览
+3. 新增markdown文件预览支持，预览支持md渲染和源文本切换支持
+4. 切换底层web server为jetty，解决这个issue：https://github.com/kekingcn/kkFileView/issues/168
+5. 引入cpdetector，解决文件编码识别问题
+6. url采用base64+urlencode双编码，彻底解决各种奇葩文件名预览问题
+7. 新增配置项office.preview.switch.disabled，控制offic文件预览切换开关
+8. 优化文本类型文件预览逻辑，采用Base64传输内容，避免预览时再次请求文件内容
+9. office预览图片模式禁用图片放大效果，达到图片和pdf预览效果一致的体验
+10. 直接代码静态设置pdfbox兼容低版本jdk，在IDEA中运行也不会有警告提示
+11. 移除guava、hutool等非必须的工具包，减少代码体积
+12. Office组件加载异步化，提速应用启动速度最快到5秒内
+13. 合理设置预览消费队列的线程数
+14. 修复压缩包里文件再次预览失败的bug
+15. 修复图片预览的bug
+
+#### > 2020年05月20日 ：
+1. 新增支持全局水印，并支持通过参数动态改变水印内容
+2. 新增支持CAD文件预览
+3. 新增base.url配置，支持使用nginx反向代理和使用context-path
+4. 支持所有配置项支持从环境变量里读取，方便Docker镜像部署和集群中大规模使用
+5. 支持配置限信任站点（只能预览来自信任点的文件源），保护预览服务不被滥用
+6. 支持配置自定义缓存清理时间（cron表达式）
+7. 全部能识别的纯文本直接预览，不用再转跳下载，如.md .java .py等
+8. 支持配置限制转换后的PDF文件下载
+9. 优化maven打包配置，解决 .sh 脚本可能出现换行符问题
+10. 将前端所有CDN依赖放到本地，方便没有外网连接的用户使用
+11. 首页评论服务由搜狐畅言切换到Gitalk
+12. 修复url中包含特殊字符可能会引起的预览异常
+13. 修复转换文件队列addTask异常
+14. 修复其他已经问题
+15. 官网建设：[https://kkview.cn](https://kkview.cn/)
+16. 官方Docker镜像仓库建设：[https://hub.docker.com/r/keking/kkfileview](https://hub.docker.com/r/keking/kkfileview)
+
+#### > 2019年06月18日 ：
+1. 支持自动清理缓存及预览文件
+2. 支持http/https下载流url文件预览
+3. 支持FTP url文件预览
+4. 加入Docker构建
+
+#### > 2019年04月08日 ：
+1. 缓存及队列实现抽象，提供JDK和REDIS两种实现(REDIS成为可选依赖)
+2. 打包方式提供zip和tar.gz包，并提供一键启动脚本
+
+#### > 2018年01月19日 ：
+
+1. 大文件入队提前处理
+1. 新增addTask文件转换入队接口
+1. 采用redis队列，支持kkFIleView接口和异构系统入队两种方式
+
+#### > 2018年01月17日 ：
+
+1. 优化项目结构，抽象文件预览接口，更方便的加入更多的文件类型预览支持，方便二次开发
+1. 新增英文文档说明（@幻幻Fate，@汝辉）贡献
+1. 新增图片预览文件支持类型
+1. 修复压缩包内轮播图片总是从第一张开始的问题
+
+#### > 2018年01月12日 ：
+
+1. 新增多图片同时预览
+1. 支持压缩包内图片轮番预览
+
+#### > 2018年01月02日 ：
+
+1. 修复txt等文本编码问题导致预览乱码
+1. 修复项目模块依赖引入不到的问题
+1. 新增spring boot profile，支持多环境配置
+1. 引入pdf.js预览doc等文件，支持doc标题生成pdf预览菜单，支持手机端预览
 
 
-> July 6, 2021, version 4.0.0 released:
+### 关于引用
+ofd    引用于 [ofdview ](https://gitee.com/cnofd/ofdview ) 开源协议 Apache-2.0
+CAD    引用于 aspose-cad 测试版本 商用请自行购买
+xmind  引用于 [ xmind-embed-viewer](https://github.com/xmindltd/xmind-embed-viewer) 开源协议 MIT
+epub   引用于 [ epub.js](https://github.com/futurepress/epub.js) 开源协议 BSD许可证
+压缩包 引用于 [sevenzipjbinding](https://github.com/borisbrodski/sevenzipjbinding )开源协议LGPL
+3D     引用于 [Online3DViewer](https://github.com/kovacsv/Online3DViewer )开源协议MIT
+drawio 引用于 [drawio](https://github.com/jgraph/drawio )开源协议 Apache-2.0
+bpmn流程图     引用于 [bpmn-js](https://github.com/bpmn-io/bpmn-js ) 自定义协议 保留水印 具体自行查看
+dcm医疗数位影像  引用于 [dcmjs](https://github.com/dcmjs-org/dcmjs )开源协议MIT
 
-1. The integration of OpenOffice in the underlying system has been replaced with LibreOffice, resulting in enhanced compatibility and improved preview effects for Office files.
-2. Fixed the directory traversal vulnerability in compressed files.
-3. Fixed the issue where previewing PPT files in PDF mode was ineffective.
-4. Fixed the issue where the front-end display of image preview mode for PPT files was abnormal.
-5. Added a new feature: the file upload function on the homepage can be enabled or disabled in real-time through configuration.
-6. Optimized the logging of Office process shutdown.
-7. Optimized the logic for finding Office components in Windows environment, with built-in LibreOffice taking priority.
-8. Optimized the synchronous execution of starting Office processes.
+### 使用登记
+如果这个项目解决了你的实际问题，可在 https://gitee.com/kekingcn/file-online-preview/issues/IGSBV
+登记下，如果节省了你的三方预览服务费用，也愿意支持下的话，可点击下方【捐助】请作者喝杯咖啡，也是非常感谢
 
-> June 17, 2021, version 3.6.0 released:
+### Stars
 
-This version includes support for OFD file type versions, and all the important features in this release were contributed by the community. We thank @gaoxingzaq and @zhangxiaoxiao9527 for their code contributions.
+#### GitHub
 
-1. Added support for previewing OFD type files. OFD is a domestically produced file format similar to PDF.
-2. Added support for transcoding and previewing video files through ffmpeg. With transcoding enabled, theoretically, all mainstream video file formats such as RM, RMVB, FLV, etc. are supported for preview.
-3. Beautified the preview effect of PPT and PPTX file types, much better looking than the previous version.
-4. Updated the versions of dependencies such as pdfbox, xstream, common-io.
+[![Stargazers over time](https://starchart.cc/kekingcn/kkFileView.svg)](https://starchart.cc/kekingcn/kkFileView)
 
-> January 28, 2021:
-
-The final update of the Lunar New Year 2020 has been released, mainly including some UI improvements, bug fixes reported by QQ group users and issues, and most importantly, it is a new version for a good year.
-
-1. Introduced galimatias to solve the problem of abnormal file download caused by non-standard file names.
-2. Updated UI style of index access demonstration interface.
-3. Updated UI style of markdown file preview.
-4. Updated UI style of XML file preview, adjusted the architecture of text file preview to facilitate expansion.
-5. Updated UI style of simTxT file preview.
-6. Adjusted the UI of continuous preview of multiple images to flip up and down.
-7. Simplified all file download IO operations by adopting the apache-common-io package.
-8. XML file preview supports switching to pure text mode.
-9. Enhanced prompt information when url base64 decoding fails.
-10. Fixed import errors and image preview bug.
-11. Fixed the problem of missing log directory when running the release package.
-12. Fixed the bug of continuous preview of multiple images in the compressed package.
-13. Fixed the problem of no universal matching for file type suffixes in uppercase and lowercase.
-14. Specified the use of the Apache Commons-code implementation for Base64 encoding to fix exceptions occurring in some JDK versions.
-15. Fixed the bug of HTML file preview of text-like files.
-16. Fixed the problem of inability to switch between jpg and pdf when previewing dwg files.
-17. Escaped dangerous characters to prevent reflected xss.
-18. Fixed the problem of duplicate encoding causing the failure of document-to-image preview and standardized the encoding.
-
-> December 27, 2020:
-
-The year-end major update of 2020 includes comprehensive architecture design, complete code refactoring, significant improvement in code quality, and more convenient secondary development. We welcome you to review the source code and contribute to building by raising issues and pull requests.
-
-1. Adjusted architecture modules, extensively refactored code, and improved code quality by several levels. Please feel free to review.
-2. Enhanced XML file preview effect and added preview of XML document structure.
-3. Added support for markdown file preview, including support for md rendering and switching between source text and preview.
-4. Switched the underlying web server to jetty, resolving the issue: https://github.com/kekingcn/kkFileView/issues/168
-5. Introduced cpdetector to solve the problem of file encoding recognition.
-6. Adopted double encoding with base64 and urlencode for URLs to completely solve preview problems with bizarre file names.
-7. Added configuration item office.preview.switch.disabled to control the switch of office file preview.
-8. Optimized text file preview logic, transmitting content through Base64 to avoid requesting file content again during preview.
-9. Disabled the image zoom effect in office preview mode to achieve consistent experience with image and pdf preview.
-10. Directly set pdfbox to be compatible with lower version JDK, and there will be no warning prompts even when run in IDEA.
-11. Removed non-essential toolkits like Guava and Hutool to reduce code volume.
-12. Asynchronous loading of Office components speeds up application launch to within 5 seconds.
-13. Reasonable settings of the number of threads in the preview consumption queue.
-14. Fixed the bug where files in compressed packages failed to preview again.
-15. Fixed the bug in image preview.
-
-> May 20th 2020 ：
-1. Support for global watermark and dynamic change of watermark content through parameters
-2. Support for CAD file Preview
-3. Add configuration item base.url, support using nginx reverse proxy and set context-path
-4. All configuration items can be read from environment variables, which is convenient for docker image deployment and large-scale use in cluster
-5. Support the configuration of TrustHost  (only the file source from the trust site can be previewed), and protect the preview service from abuse
-6. Support configuration of customize cache cleanup time (cron expression)
-7. All recognizable plain text can be previewed directly without downloading, such as .md .java .py, etc
-8. Support configuration to limit PDF file download after conversion
-9. Optimize Maven packaging configuration to solve the problem of line break in .sh script
-10. Place all CDN dependencies on the front end locally for users without external network connection
-11. Comment Service on home page switched from Sohu ChangYan to gitalk
-12. Fixed preview exceptions that may be caused by special characters in the URL
-13. Fixed the addtask exception of the transformation file queue
-14. Fixed other known issues
-15. Official website build: [https://kkview.cn](https://kkview.cn)
-16. Official docker image repository build: [https://hub.docker.com/r/keking/kkfileview](https://hub.docker.com/r/keking/kkfileview)
-
-> June 18th 2019 ：
-1. Support automatic cleaning of cache and preview files
-2. Support http/https stream url file preview
-3. Support FTP url file preview
-4. Add Docker build
-
-> April 8th 2019
-1. Cache and queue implementations abstract, providing JDK and REDIS implementations (REDIS becomes optional dependencies)
-2. Provides zip and tar.gz packages, and provides a one-click startup script
-
-> January 17th 2018
-
-1. Refined the project directory, abstract file preview interface, Easy to extend more file extensions and depoly this project on your own
-1. Added English documentation (@幻幻Fate，@汝辉) contribution
-1. Support for more image file extensions
-1. Fixed the issue that image carousel in zip file will always start from the first
-
-> January 12th 2018
-
-1. Support for multiple images preview 
-1. Support for images rotation preview in rar/zip
-
-> January 2nd 2018
-
-1. Fixed gibberish issue when preview a txt document caused by the file encoding problem 
-1. Fixed the issue that some module dependencies can not be found
-1. Add a spring boot profile, and support for Multi-environment configuration 
-1. Add `pdf.js` to preview the documents such as doc,etc.,support for generating doc headlines as pdf menu，support for mobile preview
-
-### Sponsor Us
-If this project has been helpful to you, we welcome your sponsorship. Your support is our greatest motivation.！
+### 鸣谢
+- 本项目诞生于[凯京集团]，在取得公司高层同意后以 Apache 协议开源出来反哺社区，在此特别感谢凯京集团，以及集团领导[@唐老大](https://github.com/tangshd)的支持、@端木详笑的贡献。
+- 本项目已脱离公司由[KK开源社区]维护发展壮大，感谢所有给 kkFileView 提 Issue 、Pr 开发者
+- 本项目引入的第三方组件已在 '关于引用' 列表列出，感谢这些项目，让 kkFileView 更出色

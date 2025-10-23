@@ -3,3 +3,4 @@
 *.js linguist-language=java
 *.html linguist-language=java
 *.* linguist-language=java
+docker/kkfileview-base/libreoffice/LibreOffice_25.8.2_Linux_x86-64_deb.tar.gz filter=lfs diff=lfs merge=lfs -text
