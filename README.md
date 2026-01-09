@@ -4,6 +4,7 @@
 
 | 镜像标签             | 版本    | 描述                                                                                                                                       |
 | ---------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| kkfileview:4.4.3 | 4.4.3 | **修复文件缓存冲突**: 基于MD5的内容缓存方案，解决不同URL同名文件预览冲突问题，支持动态内容文件正确预览。 |
 | kkfileview:4.4.2 | 4.4.2 | 新增LibreOffice版本支持，解决4.4.0的docker版本转换带有批注的docx文件时失败，参考[4.4.0的docker版本转换带有批注的docx文件时失败](https://github.com/kekingcn/kkFileView/issues/682) |
 
 文档在线预览项目解决方案，项目使用流行的spring boot搭建，易上手和部署。万能的文件预览开源项目，基本支持主流文档格式预览，如：
@@ -45,11 +46,11 @@ cd server
 mvn clean package -DskipTests
 
 # 在项目根目录构建kkfileview镜像
-docker build -t kkfileview:4.4.2 .
+docker build -t kkfileview:4.4.3 .
 
 # 上传到docker hub
-docker tag kkfileview:4.4.2 wangbowen/kkfileview:4.4.2
-docker push wangbowen/kkfileview:4.4.2
+docker tag kkfileview:4.4.3 wangbowen/kkfileview:4.4.3
+docker push wangbowen/kkfileview:4.4.3
 ```
 
 > 基于当前良好的架构模式，支持的文件类型在进一步丰富中
