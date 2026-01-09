@@ -1,4 +1,11 @@
 # kkFileView
+
+## Docker 镜像版本
+
+| 镜像标签             | 版本    | 描述                                                                                                                                       |
+| ---------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| kkfileview:4.4.2 | 4.4.2 | 新增LibreOffice版本支持，解决4.4.0的docker版本转换带有批注的docx文件时失败，参考[4.4.0的docker版本转换带有批注的docx文件时失败](https://github.com/kekingcn/kkFileView/issues/682) |
+
 文档在线预览项目解决方案，项目使用流行的spring boot搭建，易上手和部署。万能的文件预览开源项目，基本支持主流文档格式预览，如：
 1. 支持 doc, docx, xls, xlsx, xlsm, ppt, pptx, csv, tsv, dotm, xlt, xltm, dot, dotx,xlam, xla ,pages 等 Office 办公文档
 2. 支持 wps, dps, et, ett, wpt 等国产 WPS Office 办公文档
