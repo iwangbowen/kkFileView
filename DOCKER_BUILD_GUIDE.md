@@ -29,13 +29,13 @@ cd ..
 在项目根目录执行以下命令构建镜像：
 
 ```bash
-docker build -t kkfileview:4.4.3 .
+docker build -t kkfileview:4.4.4 .
 ```
 
 该命令会：
 - 基于 `kkfileview-base:latest` 镜像构建
 - 将打包后的应用放入容器
-- 生成标签为 `kkfileview:4.4.3` 的镜像
+- 生成标签为 `kkfileview:4.4.4` 的镜像
 
 ## 步骤三：发布镜像到 Docker Hub
 
@@ -43,11 +43,11 @@ docker build -t kkfileview:4.4.3 .
 
 ```bash
 # 标记镜像，使用用户命名空间
-docker tag kkfileview:4.4.3 wangbowen/kkfileview:4.4.3
-docker tag kkfileview:4.4.3 wangbowen/kkfileview:latest
+docker tag kkfileview:4.4.4 wangbowen/kkfileview:4.4.4
+docker tag kkfileview:4.4.4 wangbowen/kkfileview:latest
 
 # 推送镜像到 Docker Hub
-docker push wangbowen/kkfileview:4.4.3
+docker push wangbowen/kkfileview:4.4.4
 docker push wangbowen/kkfileview:latest
 ```
 
@@ -59,7 +59,7 @@ docker push wangbowen/kkfileview:latest
 #!/bin/bash
 
 # 版本号
-VERSION="4.4.3"
+VERSION="4.4.4"
 NAMESPACE="wangbowen"
 
 echo "========== 开始打包 =========="
@@ -91,7 +91,7 @@ echo "镜像已推送到: ${NAMESPACE}/kkfileview:${VERSION} 和 ${NAMESPACE}/kk
 docker images | grep kkfileview
 
 # 运行镜像进行测试
-docker run -p 8012:8012 kkfileview:4.4.3
+docker run -p 8012:8012 kkfileview:4.4.4
 ```
 
 ## 注意事项
