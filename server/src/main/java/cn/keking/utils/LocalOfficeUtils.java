@@ -1,7 +1,5 @@
 package cn.keking.utils;
 
-import org.jodconverter.core.util.OSUtils;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -9,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.stream.Stream;
+
+import org.jodconverter.core.util.OSUtils;
 
 /**
  * @author chenjh
@@ -32,8 +32,8 @@ public class LocalOfficeUtils {
             properties.load(bufferedReader);
             ConfigUtils.restorePropertiesFromEnvFormat(properties);
         } catch (Exception ignored) {}
-        String officeHome = properties.getProperty(OFFICE_HOME_KEY);
-        if (officeHome != null && !DEFAULT_OFFICE_HOME_VALUE.equals(officeHome)) {
+        String officeHome = properties.getProperty(LocalOfficeUtils.OFFICE_HOME_KEY);
+        if (officeHome != null && !LocalOfficeUtils.DEFAULT_OFFICE_HOME_VALUE.equals(officeHome)) {
             return new File(officeHome);
         }
         if (OSUtils.IS_OS_WINDOWS) {
@@ -43,7 +43,7 @@ public class LocalOfficeUtils {
             // machines; %ProgramFiles% on 32-bit ones
             final String programFiles64 = System.getenv("ProgramFiles");
             final String programFiles32 = System.getenv("ProgramFiles(x86)");
-            return findOfficeHome(EXECUTABLE_WINDOWS,
+            return LocalOfficeUtils.findOfficeHome(LocalOfficeUtils.EXECUTABLE_WINDOWS,
                     userDir + File.separator + "LibreOfficePortable" + File.separator  + "App" + File.separator + "libreoffice",
                     programFiles32 + File.separator + "LibreOffice",
                     programFiles64 + File.separator + "LibreOffice 7",
@@ -59,13 +59,13 @@ public class LocalOfficeUtils {
                     programFiles32 + File.separator + "LibreOffice 3",
                     programFiles32 + File.separator + "OpenOffice.org 3");
         } else if (OSUtils.IS_OS_MAC) {
-            File homeDir = findOfficeHome(EXECUTABLE_MAC_41,
+            File homeDir = LocalOfficeUtils.findOfficeHome(LocalOfficeUtils.EXECUTABLE_MAC_41,
                             "/Applications/LibreOffice.app/Contents",
                             "/Applications/OpenOffice.app/Contents",
                             "/Applications/OpenOffice.org.app/Contents");
 
             if (homeDir == null) {
-                homeDir = findOfficeHome(EXECUTABLE_MAC,
+                homeDir = LocalOfficeUtils.findOfficeHome(LocalOfficeUtils.EXECUTABLE_MAC,
                                 "/Applications/LibreOffice.app/Contents",
                                 "/Applications/OpenOffice.app/Contents",
                                 "/Applications/OpenOffice.org.app/Contents");
@@ -73,7 +73,7 @@ public class LocalOfficeUtils {
             return homeDir;
         } else {
             // Linux or other *nix variants
-            return findOfficeHome(EXECUTABLE_DEFAULT,
+            return LocalOfficeUtils.findOfficeHome(LocalOfficeUtils.EXECUTABLE_DEFAULT,
                     "/opt/libreoffice6.0",
                     "/opt/libreoffice6.1",
                     "/opt/libreoffice6.2",
@@ -89,6 +89,7 @@ public class LocalOfficeUtils {
                     "/opt/libreoffice24.2",
                     "/opt/libreoffice24.8",
                     "/opt/libreoffice25.2",
+                    "/opt/libreoffice25.8",
                     "/usr/lib64/libreoffice",
                     "/usr/lib/libreoffice",
                     "/usr/local/lib64/libreoffice",
