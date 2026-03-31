@@ -1,5 +1,7 @@
 # kkFileView
 
+> **本项目 Fork 自 [kekingcn/kkFileView](https://github.com/kekingcn/kkFileView)**，在原项目基础上进行了部分功能扩展与优化。感谢原作者的开源贡献！如需了解原版功能及文档，请访问原项目仓库。
+
 ## Docker 镜像版本
 
 | 镜像标签             | 版本    | 描述                                                                                                                                       |
