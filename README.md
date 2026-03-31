@@ -4,6 +4,8 @@
 
 ## Docker 镜像版本
 
+> Docker 镜像发布于 [wangbowen/kkfileview - Docker Hub](https://hub.docker.com/repository/docker/wangbowen/kkfileview)
+
 | 镜像标签             | 版本    | 描述                                                                                                                                       |
 | ---------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | kkfileview:4.4.4 | 4.4.4 | **新增LibreOffice 25.8支持**: 添加 `/opt/libreoffice25.8` 到Linux系统默认搜索路径，提升对最新版LibreOffice的兼容性。 |
