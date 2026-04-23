@@ -6,11 +6,15 @@
 
 > Docker 镜像发布于 [wangbowen/kkfileview - Docker Hub](https://hub.docker.com/repository/docker/wangbowen/kkfileview)
 
-| 镜像标签             | 版本    | 描述                                                                                                                                       |
-| ---------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| kkfileview:4.4.4 | 4.4.4 | **新增LibreOffice 25.8支持**: 添加 `/opt/libreoffice25.8` 到Linux系统默认搜索路径，提升对最新版LibreOffice的兼容性。 |
-| kkfileview:4.4.3 | 4.4.3 | **修复文件缓存冲突**: 基于MD5的内容缓存方案，解决不同URL同名文件预览冲突问题，支持动态内容文件正确预览。 |
-| kkfileview:4.4.2 | 4.4.2 | 新增LibreOffice版本支持，解决4.4.0的docker版本转换带有批注的docx文件时失败，参考[4.4.0的docker版本转换带有批注的docx文件时失败](https://github.com/kekingcn/kkFileView/issues/682) |
+- `kkfileview:4.4.5`（4.4.5）
+  - **修复Docker镜像Office转换噪声日志**：针对 LibreOffice 25.8 转换时出现 `Could not find platform independent libraries <prefix>` / `<exec_prefix>` 的问题，启动时自动定位并注入 LibreOffice 内置 Python 路径，转换与预览稳定且日志更干净。
+  - **感谢反馈与贡献**：感谢 [Issue #7](https://github.com/iwangbowen/kkFileView/issues/7) 的提出与协助，特别感谢 **[AnakinSkyW](https://github.com/AnakinSkyW)**。
+- `kkfileview:4.4.4`（4.4.4）
+  - **新增LibreOffice 25.8支持**：添加 `/opt/libreoffice25.8` 到 Linux 系统默认搜索路径，提升对最新版 LibreOffice 的兼容性。
+- `kkfileview:4.4.3`（4.4.3）
+  - **修复文件缓存冲突**：基于 MD5 的内容缓存方案，解决不同 URL 同名文件预览冲突问题，支持动态内容文件正确预览。
+- `kkfileview:4.4.2`（4.4.2）
+  - 新增 LibreOffice 版本支持，解决 4.4.0 的 docker 版本转换带有批注的 docx 文件时失败，参考 [4.4.0 的 docker 版本转换带有批注的 docx 文件时失败](https://github.com/kekingcn/kkFileView/issues/682)。
 
 文档在线预览项目解决方案，项目使用流行的spring boot搭建，易上手和部署。万能的文件预览开源项目，基本支持主流文档格式预览，如：
 1. 支持 doc, docx, xls, xlsx, xlsm, ppt, pptx, csv, tsv, dotm, xlt, xltm, dot, dotx,xlam, xla ,pages 等 Office 办公文档
@@ -51,11 +55,11 @@ cd server
 mvn clean package -DskipTests
 
 # 在项目根目录构建kkfileview镜像
-docker build -t kkfileview:4.4.3 .
+docker build -t kkfileview:4.4.5 .
 
 # 上传到docker hub
-docker tag kkfileview:4.4.3 wangbowen/kkfileview:4.4.3
-docker push wangbowen/kkfileview:4.4.3
+docker tag kkfileview:4.4.5 wangbowen/kkfileview:4.4.5
+docker push wangbowen/kkfileview:4.4.5
 ```
 
 > 基于当前良好的架构模式，支持的文件类型在进一步丰富中
