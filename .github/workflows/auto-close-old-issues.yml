@@ -1,0 +1,78 @@
+name: Auto Close Old Issues (1y)
+
+on:
+  schedule:
+    # Daily at 02:20 UTC
+    - cron: '20 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  close_old_issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close issues older than 1 year
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const now = new Date();
+            const cutoff = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+
+            const closeComment = `该 Issue 已超过 1 年未活跃，为便于维护当前问题队列，先做关闭处理。\n\n如该问题在最新版本仍存在，欢迎直接 **Reopen** 本 Issue（或新建 Issue 并关联本单），并补充：\n1. 版本与部署方式\n2. 最小复现步骤\n3. 关键日志/截图（请脱敏）\n\n我们会优先跟进。`;
+
+            let page = 1;
+            let processed = 0;
+            while (true) {
+              const { data: issues } = await github.rest.issues.listForRepo({
+                owner,
+                repo,
+                state: 'open',
+                per_page: 100,
+                page,
+                sort: 'created',
+                direction: 'asc'
+              });
+
+              if (!issues.length) break;
+
+              for (const issue of issues) {
+                // skip pull requests
+                if (issue.pull_request) continue;
+
+                const createdAt = new Date(issue.created_at);
+                if (createdAt > cutoff) {
+                  // list is sorted asc by created time; remaining items are newer
+                  core.info('Reached issues newer than cutoff, stop scanning.');
+                  return;
+                }
+
+                try {
+                  await github.rest.issues.createComment({
+                    owner,
+                    repo,
+                    issue_number: issue.number,
+                    body: closeComment,
+                  });
+
+                  await github.rest.issues.update({
+                    owner,
+                    repo,
+                    issue_number: issue.number,
+                    state: 'closed',
+                  });
+
+                  processed += 1;
+                  core.info(`Closed #${issue.number}`);
+                } catch (e) {
+                  core.warning(`Failed to close #${issue.number}: ${e.message}`);
+                }
+              }
+
+              page += 1;
+            }
+
+            core.info(`Done. Closed ${processed} old issues.`);

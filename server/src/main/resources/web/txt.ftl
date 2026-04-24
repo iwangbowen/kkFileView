@@ -12,286 +12,10 @@
 </head>
 <body>
 <input hidden id="textData" value="${textData}"/>
-<#if "${file.suffix?html}" == "txt" || "${file.suffix?html}" == "log"  || "${file.suffix?html}" == "TXT"  || "${file.suffix?html}" == "LOG">
-  <style type="text/css">
-DIV.black{line-height:25px;PADDING-RIGHT:1px;PADDING-LEFT:1px;FONT-SIZE:100%;MARGIN:1px;COLOR:#909090;BACKGROUND-COLOR:#000;TEXT-ALIGN:left}
-DIV.black A{BORDER-RIGHT:#909090 1px solid;PADDING-RIGHT:5px;BACKGROUND-POSITION:50% bottom;BORDER-TOP:#909090 1px solid;PADDING-LEFT:5px;BACKGROUND-IMAGE:url();PADDING-BOTTOM:2px;BORDER-LEFT:#909090 1px solid;COLOR:#fff;MARGIN-RIGHT:3px;PADDING-TOP:2px;BORDER-BOTTOM:#909090 1px solid;TEXT-DECORATION:none}
-DIV.black A:hover{BORDER-RIGHT:#f0f0f0 1px solid;BORDER-TOP:#f0f0f0 1px solid;BACKGROUND-IMAGE:BORDER-LEFT:#f0f0f0 1px solid;COLOR:#ffffff;BORDER-BOTTOM:#f0f0f0 1px solid;BACKGROUND-COLOR:#404040}
-DIV.black A:active{BORDER-RIGHT:#f0f0f0 1px solid;BORDER-TOP:#f0f0f0 1px solid;BACKGROUND-IMAGE:BORDER-LEFT:#f0f0f0 1px solid;COLOR:#ffffff;BORDER-BOTTOM:#f0f0f0 1px solid;BACKGROUND-COLOR:#404040}
-.divContent{color:#fff;font-size：30px；
-line-height：30px；
-font-family：“SimHei”；
-text-indent:2em;padding-bottom:10px;white-space:pre-wrap;white-space:-moz-pre-wrap;white-space:-pre-wrap;white-space:-o-pre-wrap;word-wrap:break-word;background-color:#000}
-input{
-color:#ffffff;
-background-color:#000000
-}
-    </style>
-
-
-	<div class="container">
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <h4 class="panel-title">
-                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-                    ${file.name}
-                </a>
-            </h4>
-        </div>
-        <div class="panel-body">
-          <div id="divPagenation" class="black" >
-
-    </div>
-        <div id="divContent" class="panel-body">
-           </div>
-        </div>
-    </div>
-</div>
- <script type="text/javascript">
-        var base64data = $("#textData").val()
-        var s = Base64.decode(base64data);
-         var imgReg = /(<img\s+src='\S+'\s*(\/)?>)/gi;
-         matchContent = s.match(imgReg);
-         imgContent = s;
-         if(imgReg.test(s))
-         {
-            //将img标签替换为❈
-            imgContent =  s.replace(imgReg,"❈");
-         }
-        var Length= 20000;
-        // 封装DHTMLpagenation
-        function DHTMLpagenation(content)
-        {
-            this.content=content; // 内容
-            this.contentLength=imgContent.length; // 内容长度
-            this.pageSizeCount; // 总页数
-            this.perpageLength= Length; //default perpage byte length.
-            this.currentPage=1; // 起始页为第1页
-            this.regularExp=/\d+/; // 建立正则表达式，匹配数字型字符串。
-            this.divDisplayContent;
-            this.contentStyle=null;
-            this.strDisplayContent="";
-            this.divDisplayPagenation;
-            this.strDisplayPagenation="";
-
-            // 把第二个参数赋给perpageLength;
-            arguments.length==2 ? perpageLength = arguments[1] : '';
-
-            try {
-                //创建要显示的DIV
-                divExecuteTime=document.createElement("DIV");
-                document.body.appendChild(divExecuteTime);
-            }
-            catch(e)
-            {
-            }
-
-            // 得到divPagenation容器。
-            if(document.getElementById("divPagenation"))
-            {
-                divDisplayPagenation=document.getElementById("divPagenation");
-            }
-            else
-            {
-                try
-                {
-                    //创建分页信息
-                    divDisplayPagenation=document.createElement("DIV");
-                    divDisplayPagenation.id="divPagenation";
-                    document.body.appendChild(divDisplayPagenation);
-                }
-                catch(e)
-                {
-                    return false;
-                }
-            }
-
-            // 得到divContent容器
-            if(document.getElementById("divContent"))
-            {
-                divDisplayContent=document.getElementById("divContent");
-            }
-            else
-            {
-                try
-                {
-                    //创建每页显示内容的消息的DIV
-                    divDisplayContent=document.createElement("DIV");
-                    divDisplayContent.id="divContent";
-                    document.body.appendChild(divDisplayContent);
-                }
-                catch(e)
-                {
-                    return false;
-                }
-            }
-            DHTMLpagenation.initialize();
-            return this;
-
-        };
-
-        //初始化分页；
-        //包括把加入CSS，检查是否需要分页
-        DHTMLpagenation.initialize=function()
-        {
-            divDisplayContent.className= contentStyle != null ? contentStyle : "divContent";
-
-            if(contentLength<=perpageLength)
-            {
-                strDisplayContent=content;
-                divDisplayContent.innerHTML=strDisplayContent;
-                return null;
-            }
-
-            pageSizeCount=Math.ceil((contentLength/perpageLength));
-
-            DHTMLpagenation.goto(currentPage);
-
-            DHTMLpagenation.displayContent();
-        };
-
-       //显示分页栏
-        DHTMLpagenation.displayPage=function()
-        {
-            strDisplayPagenation="";
-            if(currentPage && currentPage !=1)
-            {
-             
-                 strDisplayPagenation+='<button  onclick="DHTMLpagenation.previous()">上一页</button>';
-            }
-            else
-            {
-                strDisplayPagenation+="上一页  ";
-            }
-
-            for(var i=1;i<=pageSizeCount;i++)
-            {
-                if(i!=currentPage)
-                {
-                  
-                     strDisplayPagenation+='<button onclick="DHTMLpagenation.goto('+i+');">'+i+'</button>';
-                }
-                else
-                {
-                    strDisplayPagenation+=i+"  ";
-                }
-            }
-
-            if(currentPage && currentPage!=pageSizeCount)
-            {
-             strDisplayPagenation+='<button  onclick="DHTMLpagenation.next()">下一页</button>';
-            }
-            else
-            {
-                strDisplayPagenation+="下一页  ";
-            }
-           strDisplayPagenation+="共 " + pageSizeCount + " 页。<br>每页" + perpageLength + " 字符，调整字符数：<input type='text' value='"+perpageLength+"' id='ctlPerpageLength' /><input type='button' value='确定' onclick='DHTMLpagenation.change()' />";
-          divDisplayPagenation.innerHTML=strDisplayPagenation;
-         };
-
-        //上一页
-        DHTMLpagenation.previous=function()
-        {
-            DHTMLpagenation.goto(currentPage-1);
-        };
-
-        //下一页
-        DHTMLpagenation.next=function()
-        {
-
-            DHTMLpagenation.goto(currentPage+1);
-        };
-
-        //跳转至某一页
-        DHTMLpagenation.goto=function(iCurrentPage)
-        {
-            if(regularExp.test(iCurrentPage))
-            {
-                currentPage=iCurrentPage;
-
-                var tempContent = "";
-                //获取当前的内容 里面包含 ❈
-                var currentContent = imgContent.substr((currentPage-1)*perpageLength,perpageLength);
-                tempContent = currentContent;
-                //当前页是否有 ❈ 获取最后一个 ❈ 的位置
-                var indexOf = currentContent.indexOf("❈");
-                if(indexOf >= 0)
-                {
-                      //获取从开始位置到当前页位置的内容
-                      var beginToEndContent = imgContent.substr(0,currentPage*perpageLength);
-
-                      //获取开始到当前页位置的内容 中的 * 的最后的下标
-                      var reCount = beginToEndContent.split("❈").length - 1;
-
-                      var contentArray = currentContent.split("❈");
-
-                      tempContent = replaceStr(contentArray,reCount,matchContent);
-
-                }
-
-                strDisplayContent=tempContent;
-            }
-            else
-            {
-                alert("页面参数错误");
-            }
-            DHTMLpagenation.displayPage();
-            DHTMLpagenation.displayContent();
-        };
-        //显示当前页内容
-        DHTMLpagenation.displayContent=function()
-        {
-            divDisplayContent.innerHTML=strDisplayContent;
-        };
-
-        //改变每页的字节数
-        DHTMLpagenation.change=function()
-        {
-
-            var iPerpageLength = document.getElementById("ctlPerpageLength").value;
-            if(regularExp.test(iPerpageLength))
-            {
-
-                DHTMLpagenation(s,iPerpageLength);
-            }
-            else
-            {
-                alert("请输入数字");
-            }
-        };
-
-        /*  currentArray:当前页以 * 分割后的数组
-            replaceCount:从开始内容到当前页的内容 * 的个数
-            matchArray ： img标签的匹配的内容
-        */
-        function replaceStr(currentArray,replaceCount,matchArray)
-        {
-            var result = "";
-            for(var i=currentArray.length -1,j = replaceCount-1 ;i>=1; i--)
-            {
-
-               var temp = (matchArray[j] + currentArray[i]);
-
-               result = temp + result;
-
-               j--;
-            }
-
-            result = currentArray[0] + result ;
-
-            return result;
-        }
-       
-         DHTMLpagenation(s,Length);
-
-		   /**
-     * 初始化
-     */
-    window.onload = function () {
-        initWaterMark();
-    }
-</script>
- <#else/>
+<link rel="stylesheet" href="highlight/highlight.css">
+<!-- 先加载fenye.js -->
+<script src="js/fenye.js" type="text/javascript"></script>
+<!-- 改为普通的container，而不是container-fluid -->
 <div class="container">
     <div class="panel panel-default">
         <div class="panel-heading">
@@ -301,31 +25,63 @@ background-color:#000000
                 </a>
             </h4>
         </div>
-        <div class="panel-body">
-            <div id="text"></div>
+      	<div id="divPagenation" class="black" >
+        </div>
+        <div id="divContent" class="panel-body">
         </div>
     </div>
 </div>
-
-<script>
-
+<script type="text/javascript">
+    // 确保DOM加载完成
+    document.addEventListener('DOMContentLoaded', function() {
+        // 解码Base64数据
+        var base64data = document.getElementById("textData").value;
+        var s;
+        try {
+            s = Base64.decode(base64data);
+        } catch(e) {
+            console.error("Base64解码失败:", e);
+            s = "内容解码失败";
+        }
+        
+        // 获取参数
+        var kkkeyword = '${highlightall}';
+        var Length = 20000;
+        var page = '${page}' || 1;
+        var txt = "txt";
+        
+        console.log("初始化分页，参数:", { 
+            contentLength: s.length, 
+            kkkeyword: kkkeyword, 
+            Length: Length, 
+            page: page, 
+            txt: txt 
+        });
+        
+        // 初始化分页
+        if (typeof DHTMLpagenation === 'function') {
+            try {
+                DHTMLpagenation(s, kkkeyword, Length, page, txt);
+                console.log("分页初始化成功");
+            } catch(e) {
+                console.error("分页初始化失败:", e);
+                document.getElementById("divContent").innerHTML = "分页初始化失败: " + e.message;
+            }
+        } else {
+            console.error("DHTMLpagenation函数未定义");
+            document.getElementById("divContent").innerHTML = "分页功能加载失败，请刷新页面重试";
+        }
+    });
+    
     /**
-     *加载普通文本
-     */
-    function loadText() {
-        var base64data = $("#textData").val()
-        var textData = Base64.decode(base64data);
-        var textPreData = "<xmp style='background-color: #FFFFFF;overflow-y: scroll;border:none'>" + textData + "</xmp>";
-        $("#text").append(textPreData);
-    }
-   /**
      * 初始化
      */
     window.onload = function () {
-        initWaterMark();
-        loadText();
+        if (typeof initWaterMark === 'function') {
+            initWaterMark();
+        }
     }
 </script>
-	 </#if>
+
 </body>
 </html>

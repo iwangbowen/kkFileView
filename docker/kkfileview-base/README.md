@@ -8,10 +8,10 @@ Then, use kkfileview-base as the base image to build and speed up the kkfileview
 
 To build the base image, run the following command:
 
-> In this example, the image tag is 4.4.0. The Dockerfile maintained in this project considers cross-platform compatibility. If you need an arm64 architecture image, run the same build command on an arm64 architecture machine.
+> In this example, the image tag is 5.0.0. The Dockerfile maintained in this project considers cross-platform compatibility. If you need an arm64 architecture image, run the same build command on an arm64 architecture machine.
 
 ```shell
-docker build --tag keking/kkfileview-base:4.4.0 .
+docker build --tag keking/kkfileview-base:5.0.0 .
 ```
 
 
@@ -49,5 +49,5 @@ Assuming the current machine is amd64 (x86_64) architecture, you'll need to enab
 Now you can enjoy the building. Here’s an example build command:
 
 ```shell
-docker buildx build --platform=linux/amd64,linux/arm64 -t keking/kkfileview-base:4.4.0 --push .
+docker buildx build --platform=linux/amd64,linux/arm64 -t keking/kkfileview-base:5.0.0 --push .
 ```

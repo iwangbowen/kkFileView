@@ -1,0 +1,22 @@
+{
+  "name": "kkfileview-e2e",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "gen:fixtures": "node ./scripts/generate-fixtures.mjs",
+    "gen:office": "python3 ./scripts/generate-office-fixtures.py",
+    "gen:all": "npm run gen:fixtures && npm run gen:office",
+    "pretest": "npm run gen:all",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "pretest:smoke": "npm run gen:all",
+    "test:smoke": "playwright test specs/preview-smoke.spec.ts",
+    "pretest:perf": "npm run gen:all",
+    "test:perf": "playwright test specs/perf-smoke.spec.ts",
+    "test:ci": "npm run gen:all && playwright test specs/preview-smoke.spec.ts specs/perf-smoke.spec.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}

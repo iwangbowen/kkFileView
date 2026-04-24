@@ -19,10 +19,11 @@
 <iframe src="" width="100%" frameborder="0"></iframe>
 </body>
 <script type="text/javascript">
-    var url = '${finalUrl}';
+   	var url = '${finalUrl}';
+	var kkagent = '${kkagent}';
     var baseUrl = '${baseUrl}'.endsWith('/') ? '${baseUrl}' : '${baseUrl}' + '/';
-    if (!url.startsWith(baseUrl)) {
-         url = baseUrl + 'getCorsFile?urlPath=' + encodeURIComponent(Base64.encode(url));
+    if (kkagent === 'true' || !url.startsWith(baseUrl)) {
+        url = baseUrl + 'getCorsFile?urlPath=' + encodeURIComponent(Base64.encode(url))+ "&key=${kkkey}";
     }
     document.getElementsByTagName('iframe')[0].src =  "${baseUrl}eml/index.html?file="+encodeURIComponent(url);
     document.getElementsByTagName('iframe')[0].height = document.documentElement.clientHeight - 10;

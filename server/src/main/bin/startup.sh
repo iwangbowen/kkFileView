@@ -49,9 +49,16 @@ else
     fi
   fi
 
+  JAR_PATH=$(ls kkFileView-*.jar 2>/dev/null | head -n 1)
+  if [ -z "${JAR_PATH}" ]; then
+    echo "kkFileView jar not found in ${KKFILEVIEW_BIN_FOLDER}"
+    exit 1
+  fi
+
   ## 启动kkFileView
   echo "Starting kkFileView..."
-  nohup java -Dfile.encoding=UTF-8 -Dspring.config.location=../config/application.properties -jar kkFileView-4.4.0.jar > ../log/kkFileView.log 2>&1 &
+  echo "Using jar ${JAR_PATH}"
+  nohup java -Dfile.encoding=UTF-8 -Dspring.config.location=../config/application.properties -jar "${JAR_PATH}" > ../log/kkFileView.log 2>&1 &
   echo "Please execute ./showlog.sh to check log for more information"
   echo "You can get help in our official home site: https://kkview.cn"
   echo "If you need further help, please join our kk opensource community: https://t.zsxq.com/09ZHSXbsQ"

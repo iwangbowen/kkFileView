@@ -6,53 +6,75 @@
 
     <groupId>cn.keking</groupId>
     <artifactId>kkFileView-parent</artifactId>
-    <version>4.4.0</version>
+    <version>5.0.0</version>
 
     <properties>
+        <!-- ========== Java 和编译配置 ========== -->
         <java.version>21</java.version>
-        <jodconverter.version>4.4.6</jodconverter.version>
-        <spring.boot.version>3.5.6</spring.boot.version>
-        <poi.version>5.2.2</poi.version>
-        <xdocreport.version>1.0.6</xdocreport.version>
-        <xstream.version>1.4.20</xstream.version>
-        <junrar.version>7.5.5</junrar.version>
-        <redisson.version>3.22.0</redisson.version>
-        <sevenzipjbinding.version>16.02-2.01</sevenzipjbinding.version>
-        <jchardet.version>1.0</jchardet.version>
-        <antlr.version>2.7.7</antlr.version>
-        <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
-        <rocksdb.version>5.17.2</rocksdb.version>
-        <pdfbox.version>3.0.2</pdfbox.version>
-        <jai-imageio.version>1.4.0</jai-imageio.version>
-        <jbig2-imageio.version>3.0.4</jbig2-imageio.version>
-        <galimatias.version>0.2.1</galimatias.version>
-        <bytedeco.version>1.5.2</bytedeco.version>
-        <opencv.version>4.1.2-1.5.2</opencv.version>
-        <openblas.version>0.3.6-1.5.1</openblas.version>
-        <ffmpeg.version>4.2.1-1.5.2</ffmpeg.version>
-        <itextpdf.version>5.5.13.3</itextpdf.version>
-        <httpclient.version>3.1</httpclient.version>
-        <aspose-cad.version>23.9</aspose-cad.version>
-        <bcprov-jdk15on.version>1.70</bcprov-jdk15on.version>
-        <juniversalchardet.version>1.0.3</juniversalchardet.version>
-        <httpcomponents.version>4.5.14</httpcomponents.version>
-
-        <commons-cli.version>1.5.0</commons-cli.version>
-        <commons-net.version>3.9.0</commons-net.version>
-        <commons-lang3.version>3.13.0</commons-lang3.version>
-
-
         <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
         <maven.compiler.target>${java.version}</maven.compiler.target>
-
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- ========== Spring 框架 ========== -->
+        <spring.boot.version>3.5.6</spring.boot.version>
+
+        <!-- ========== 文档转换和Office处理 ========== -->
+        <jodconverter.version>4.4.11</jodconverter.version>
+        <poi.version>5.2.5</poi.version>
+        <xdocreport.version>1.0.6</xdocreport.version>
+        <aspose-cad.version>25.10</aspose-cad.version>
+
+        <!-- ========== PDF 处理 ========== -->
+        <pdfbox.version>3.0.6</pdfbox.version>
+
+        <!-- ========== 图像处理 ========== -->
+        <jai-imageio.version>1.4.0</jai-imageio.version>
+        <jbig2-imageio.version>3.0.4</jbig2-imageio.version>
+        <commons-imaging.version>1.0.0-alpha6</commons-imaging.version>
+
+        <!-- ========== 视频处理 (JavaCV) ========== -->
+        <bytedeco.version>1.5.12</bytedeco.version>
+        <opencv.version>4.11.0-1.5.12</opencv.version>
+        <openblas.version>0.3.30-1.5.12</openblas.version>
+        <ffmpeg.version>7.1.1-1.5.12</ffmpeg.version>
+
+        <!-- ========== 压缩文件处理 ========== -->
+        <sevenzipjbinding.version>16.02-2.01</sevenzipjbinding.version>
+        <junrar.version>7.5.5</junrar.version>
+
+        <!-- ========== 缓存和存储 ========== -->
+        <redisson.version>4.0.0</redisson.version>
+        <rocksdb.version>5.17.2</rocksdb.version>
+        <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
+
+        <!-- ========== 网络通信 ========== -->
+        <httpcomponents.version>4.5.16</httpcomponents.version>
+        <commons-net.version>3.12.0</commons-net.version>
+
+        <!-- ========== Apache Commons 工具库 ========== -->
+        <commons-lang3.version>3.20.0</commons-lang3.version>
+        <commons-cli.version>1.11.0</commons-cli.version>
+
+        <!-- ========== 编码和字符处理 ========== -->
+        <juniversalchardet.version>1.0.3</juniversalchardet.version>
+        <jchardet.version>1.0</jchardet.version>
+
+        <!-- ========== 安全相关 ========== -->
+        <bcprov-jdk15on.version>1.70</bcprov-jdk15on.version>
+
+        <!-- ========== 其他工具库 ========== -->
+        <xstream.version>1.4.21</xstream.version>
+        <antlr.version>2.7.7</antlr.version>
+        <galimatias.version>0.2.1</galimatias.version>
     </properties>
 
     <modules>
         <module>server</module>
     </modules>
 
+    <!-- ========== 项目信息 ========== -->
     <name>kkFileView-parent</name>
     <description>专注文件在线预览服务</description>
     <url>https://github.com/kekingcn/kkFileView</url>
@@ -88,5 +110,4 @@
         <system>github</system>
         <url>https://github.com/kekingcn/kkFileView/issues</url>
     </issueManagement>
-
 </project>

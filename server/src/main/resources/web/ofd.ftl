@@ -18,14 +18,16 @@
 </body>
 <script type="text/javascript">
     var url = '${finalUrl}';
+	var kkagent = '${kkagent}';
     var baseUrl = '${baseUrl}'.endsWith('/') ? '${baseUrl}' : '${baseUrl}' + '/';
-    if (!url.startsWith(baseUrl)) {
-        url = baseUrl + 'getCorsFile?urlPath=' + encodeURIComponent(Base64.encode(url));
+     
+    if (kkagent === 'true' || !url.startsWith(baseUrl)) {
+         url = baseUrl + 'getCorsFile?urlPath=' + encodeURIComponent(Base64.encode(url))+ "&key=${kkkey}";
     }
-     if(IsPhone()){
-   	document.getElementsByTagName('iframe')[0].src = "${baseUrl}ofd/index.html?file=" + encodeURIComponent(url)+"&scale=width";
+    if(IsPhone()){
+   	document.getElementsByTagName('iframe')[0].src = "${baseUrl}ofd/index.html?file=" + encodeURIComponent(url)+"&scale=width"+"&page=${page}";
     }else{
-    document.getElementsByTagName('iframe')[0].src = "${baseUrl}ofd/index.html?file="+ encodeURIComponent(url)+"";
+    document.getElementsByTagName('iframe')[0].src = "${baseUrl}ofd/index.html?file="+ encodeURIComponent(url)+"&page=${page}";
     }
     document.getElementsByTagName('iframe')[0].height = document.documentElement.clientHeight - 10;
     /**

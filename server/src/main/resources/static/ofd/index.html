@@ -113,12 +113,6 @@
               </path>
             </svg>
           </div>
-		  <div id="line" onclick="line('1')" title="线条" class="btn-icon">
-            黑屏点我
-          </div>
-		   <div id="line" onclick="line('0')" title="线条" class="btn-icon">
-            恢复
-          </div>
         </div>
       </header>
       <main class="el-main" id="main" style="height: auto; background: rgb(242, 242, 242); padding: 0px;">
@@ -132,19 +126,6 @@
       </main>
     </section>
   </div>
-
   <script src="js/cnofd-view.js"></script>
-
 </body>
-<script>
-   function line(line) {
-      var url = window.location.href;
-   if(line ==1){
-    url = url + "&line=1";
-   }else{
-    url = url + "&line=0";
-   }
-   window.location.href = url;
-    }
-</script>
 </html>

@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,6 +30,7 @@ public class OfficeToPdfService {
 
 
     public static void converterFile(File inputFile, String outputFilePath_end, FileAttribute fileAttribute) throws OfficeException {
+        Instant startTime = Instant.now();
         File outputFile = new File(outputFilePath_end);
         // 假如目标路径不存在,则新建该路径
         if (!outputFile.getParentFile().exists() && !outputFile.getParentFile().mkdirs()) {
@@ -65,7 +68,33 @@ public class OfficeToPdfService {
         } else {
             builder = LocalConverter.builder().storeProperties(customProperties);
         }
-        builder.build().convert(inputFile).to(outputFile).execute();
+
+        try {
+            builder.build().convert(inputFile).to(outputFile).execute();
+
+            // 计算转换耗时
+            Instant endTime = Instant.now();
+            Duration duration = Duration.between(startTime, endTime);
+
+            // 格式化显示耗时（支持不同时间单位）
+            String durationFormatted;
+            if (duration.toMinutes() > 0) {
+                durationFormatted = String.format("%d分%d秒", duration.toMinutes(), duration.toSecondsPart());
+            } else if (duration.toSeconds() > 0) {
+                durationFormatted = String.format("%d.%03d秒",duration.toSeconds(), duration.toMillisPart());
+            } else {
+                durationFormatted = String.format("%d毫秒", duration.toMillis());
+            }
+
+            logger.info("文件转换成功：{} -> {}，耗时：{}",
+                    inputFile.getName(),outputFile.getName(),  durationFormatted);
+
+        } catch (OfficeException e) {
+            Instant endTime = Instant.now();
+            Duration duration = Duration.between(startTime, endTime);
+            logger.error("文件转换失败：{}，已耗时：{}毫秒，错误信息：{}", inputFile.getName(), duration.toMillis(), e.getMessage());
+            throw e;
+        }
     }
 
 

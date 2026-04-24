@@ -8,7 +8,7 @@
 
  => Java Version            ::  ${java.version}
  => Spring Boot             ::  ${spring-boot.version}
- => kkFileView              ::  4.4.0
+ => kkFileView              ::  5.0
  => Home site               ::  https://kkview.cn
  => Github                  ::  https://github.com/kekingcn/kkFileView
  => Gitee                   ::  https://gitee.com/kekingcn/file-online-preview

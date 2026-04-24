@@ -90,6 +90,8 @@ public class LocalOfficeUtils {
                     "/opt/libreoffice24.8",
                     "/opt/libreoffice25.2",
                     "/opt/libreoffice25.8",
+                    "/opt/libreoffice26.2",
+                    "/opt/libreoffice26.8",
                     "/usr/lib64/libreoffice",
                     "/usr/lib/libreoffice",
                     "/usr/local/lib64/libreoffice",

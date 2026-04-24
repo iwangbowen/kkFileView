@@ -9,9 +9,9 @@ import org.springframework.web.util.HtmlUtils;
 
 import java.io.File;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class KkFileUtils {
 
@@ -19,17 +19,31 @@ public class KkFileUtils {
 
     public static final String DEFAULT_FILE_ENCODING = "UTF-8";
 
-    private static final List<String> illegalFileStrList = new ArrayList<>();
+    // 路径遍历关键字列表
+    private static final Set<String> illegalFileStrList;
 
     static {
-        illegalFileStrList.add("../");
-        illegalFileStrList.add("./");
-        illegalFileStrList.add("..\\");
-        illegalFileStrList.add(".\\");
-        illegalFileStrList.add("\\..");
-        illegalFileStrList.add("\\.");
-        illegalFileStrList.add("..");
-        illegalFileStrList.add("...");
+        Set<String> set = new HashSet<>();
+
+        // 基本路径遍历
+        Collections.addAll(set, "../", "./", "..\\", ".\\", "\\..", "\\.", "..", "...", "....", ".....");
+
+        // URL编码的路径遍历
+        Collections.addAll(set, "%2e%2e%2f", "%2e%2e/", "..%2f", "%2e%2e%5c", "%2e%2e\\", "..%5c",
+                "%252e%252e%252f", "%252e%252e/", "..%252f");
+
+        // Unicode编码绕过
+        Collections.addAll(set, "\\u002e\\u002e\\u002f", "\\U002e\\U002e\\U002f",
+                "\u00c0\u00ae\u00c0\u00ae", "\u00c1\u009c\u00c1\u009c");
+
+        // 特殊分隔符
+        Collections.addAll(set, "|..|", "|../|", "|..\\|");
+
+        // Windows特殊路径
+        Collections.addAll(set, "\\\\?\\", "\\\\.\\");
+
+        // 转换为不可变集合
+        illegalFileStrList = Collections.unmodifiableSet(set);
     }
 
     /**
@@ -45,6 +59,18 @@ public class KkFileUtils {
             }
         }
         return false;
+    }
+    public static boolean validateFileNameLength(String fileName) {
+        if (fileName == null) {
+            return false;
+        }
+        // 文件名长度限制：255个字符（不包含路径）
+        int windowsMaxLength = 255;
+        if (fileName.length() > windowsMaxLength) {
+            System.err.println("文件名长度超过限制（255个字符）");
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -68,7 +94,22 @@ public class KkFileUtils {
      * @return 是否http
      */
     public static boolean isHttpUrl(URL url) {
-        return url.getProtocol().toLowerCase().startsWith("file") || url.getProtocol().toLowerCase().startsWith("http");
+        return url.getProtocol().toLowerCase().startsWith("http") || url.getProtocol().toLowerCase().startsWith("https");
+    }
+
+    /**
+     * 判断url是否是file资源
+     *
+     */
+    public static boolean isFileUrl(URL url) {
+        return url.getProtocol().toLowerCase().startsWith("file");
+    }
+
+    /**
+     * 判断当前操作系统是否为Windows
+     */
+    static boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("windows");
     }
 
     /**
@@ -208,5 +249,15 @@ public class KkFileUtils {
         File file = new File(filePath);
         return file.exists();
     }
-
+    /**
+     * 判断是否是数字
+     */
+    public static boolean isNumeric(String str){
+        Pattern pattern = Pattern.compile("[0-9]*");
+        if (ObjectUtils.isEmpty(str)){
+            return false;
+        }
+        Matcher isNum = pattern.matcher(str);
+        return isNum.matches();
+    }
 }

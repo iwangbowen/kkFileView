@@ -1,0 +1,115 @@
+     body {
+            background-color: #404040;
+        }
+        .container {
+            width: 100%;
+            height: 100%;
+        }
+        .img-area {
+            text-align: center;
+        }
+        .my-photo {
+            max-width: 98%;
+            margin:0 auto;
+            border-radius:3px;
+            box-shadow:rgba(0,0,0,0.15) 0 0 8px;
+            background:#FBFBFB;
+            border:1px solid #ddd;
+            margin:1px auto;
+            padding:5px;
+        }
+        .image-container {
+            /*display: flex; !* 使用flexbox布局 *!*/
+            /*justify-content: space-around; !* 图片间隔对齐 *!*/
+             position: relative;
+            display: inline-block;
+        }
+
+        .image-container img {
+            width: 100%; /* 根据需要调整宽度 */
+            height: auto; /* 保持图片的宽高比 */
+        }
+
+        .image-container img:hover {
+            width: 150%; /* 根据需要调整宽度 */
+            height: auto; /* 保持图片的宽高比 */
+        }
+
+        .button-container {
+            position: absolute;
+            top: 5px; /* 根据需要调整距离顶部的位置 */
+            right: 10px; /* 根据需要调整距离右侧的位置 */
+        }
+
+        .button-container button {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            padding: 5px 10px 5px 22px;
+            cursor: pointer;
+            border: #b0b0b0 1px;
+        }
+        /*顺时针旋转90度*/
+        .imgT90 {
+            transform: rotate(90deg);
+            -ms-transform: rotate(90deg);
+            -webkit-transform: rotate(90deg);
+            -o-transform: rotate(90deg);
+            -moz-transform: rotate(90deg);
+        }
+
+        .imgT-90 {
+            transform: rotate(-90deg);
+            -ms-transform: rotate(-90deg);
+            -webkit-transform: rotate(-90deg);
+            -o-transform: rotate(-90deg);
+            -moz-transform: rotate(-90deg);
+        }
+
+        /*顺时针旋转180度*/
+        .imgT180 {
+            transform: rotate(180deg);
+            -ms-transform: rotate(180deg);
+            -webkit-transform: rotate(180deg);
+            -o-transform: rotate(180deg);
+            -moz-transform: rotate(180deg);
+        }
+
+        .imgT-180 {
+            transform: rotate(-180deg);
+            -ms-transform: rotate(-180deg);
+            -webkit-transform: rotate(-180deg);
+            -o-transform: rotate(-180deg);
+            -moz-transform: rotate(-180deg);
+        }
+
+        /*顺时针旋转270度*/
+        .imgT270 {
+            transform: rotate(270deg);
+            -ms-transform: rotate(270deg);
+            -webkit-transform: rotate(270deg);
+            -o-transform: rotate(270deg);
+            -moz-transform: rotate(270deg);
+        }
+
+        .imgT-270 {
+            transform: rotate(-270deg);
+            -ms-transform: rotate(-270deg);
+            -webkit-transform: rotate(-270deg);
+            -o-transform: rotate(-270deg);
+            -moz-transform: rotate(-270deg);
+        }
+
+        .imgS150 {
+            transform: scale(1.5);
+            -ms-transform: scale(1.5);
+            -webkit-transform: scale(1.5);
+            -o-transform: scale(1.5);
+            -moz-transform: scale(1.5);
+        }
+
+        .imgS200 {
+            transform: scale(2);
+            -ms-transform: scale(2);
+            -webkit-transform: scale(2);
+            -o-transform: scale(2);
+            -moz-transform: scale(2);
+        }

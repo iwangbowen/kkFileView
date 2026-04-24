@@ -26,6 +26,7 @@ nbdist/
 ### VS Code ###
 .vscode/
 .DS_Store
+.artifacts/
 
 server/src/main/cache/
 server/src/main/file/

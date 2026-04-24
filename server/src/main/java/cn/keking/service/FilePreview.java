@@ -34,6 +34,10 @@ public interface FilePreview {
     String NOT_SUPPORTED_FILE_PAGE = "fileNotSupported";
     String XLSX_FILE_PREVIEW_PAGE = "officeweb";
     String CSV_FILE_PREVIEW_PAGE = "csv";
+    String MSG_FILE_PREVIEW_PAGE = "msg";
+    String HEIC_FILE_PREVIEW_PAGE = "heic";
+    String CADVIEWER_FILE_PREVIEW_PAGE = "cadviewer";
+    String WAITING_FILE_PREVIEW_PAGE = "waiting";
 
     String filePreviewHandle(String url, Model model, FileAttribute fileAttribute);
 }

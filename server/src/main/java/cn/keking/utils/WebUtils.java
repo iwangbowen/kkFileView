@@ -1,10 +1,15 @@
 package cn.keking.utils;
 
+import cn.keking.config.ConfigConstants;
 import io.mola.galimatias.GalimatiasParseException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.HtmlUtils;
 
@@ -17,8 +22,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,6 +34,18 @@ public class WebUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebUtils.class);
     private static final String BASE64_MSG = "base64";
+    private static final String URL_PARAM_BASIC_NAME = "basic.name";
+    private static final String URL_PARAM_BASIC_PASS = "basic.pass";
+    private static final Map<String, String> ERROR_MESSAGES = Map.of(
+            "base64", "KK提醒您:接入方法错误未使用BASE64",
+            "base641", "KK提醒您:BASE64解码异常,确认是否正确使用BASE64编码",
+            "Keyerror", "KK提醒您:AES解码错误，请检测你的秘钥是否正确",
+            "base64error", "KK提醒您:你选用的是ASE加密，实际用了BASE64加密接入",
+            "byteerror", "KK提醒您:解码异常，检测你接入方法是否正确"
+    );
+
+    private static final String EMPTY_URL_MSG = "KK提醒您:地址不能为空";
+    private static final String INVALID_URL_MSG = "KK提醒您:请正确使用URL(必须包括https ftp file 协议)";
     /**
      * 获取标准的URL
      *
@@ -46,11 +62,10 @@ public class WebUtils {
      *
      */
     public static String encodeFileName(String name) {
-        try {
-            name = URLEncoder.encode(name, "UTF-8").replaceAll("\\+", "%20");
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        name = URLEncoder.encode(name, StandardCharsets.UTF_8)
+                .replaceAll("%2F", "/")  // 恢复斜杠
+                .replaceAll("%5C", "/")  // 恢复反斜杠
+                .replaceAll("\\+", "%20");  // 空格处理
         return name;
     }
 
@@ -215,11 +230,7 @@ public class WebUtils {
         if (fileNameEndIndex < fileNameStartIndex) {
             return url;
         }
-        try {
-            encodedFileName = URLEncoder.encode(noQueryUrl.substring(fileNameStartIndex, fileNameEndIndex), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        encodedFileName = URLEncoder.encode(noQueryUrl.substring(fileNameStartIndex, fileNameEndIndex), StandardCharsets.UTF_8);
         return url.substring(0, fileNameStartIndex) + encodedFileName + url.substring(fileNameEndIndex);
     }
 
@@ -234,17 +245,18 @@ public class WebUtils {
         String urls = request.getParameter("urls");
         String currentUrl = request.getParameter("currentUrl");
         String urlPath = request.getParameter("urlPath");
+        String encryption = request.getParameter("encryption");
         if (StringUtils.isNotBlank(url)) {
-            return decodeUrl(url);
+            return decodeUrl(url,encryption);
         }
         if (StringUtils.isNotBlank(currentUrl)) {
-            return decodeUrl(currentUrl);
+            return decodeUrl(currentUrl,encryption);
         }
         if (StringUtils.isNotBlank(urlPath)) {
-            return decodeUrl(urlPath);
+            return decodeUrl(urlPath,encryption);
         }
         if (StringUtils.isNotBlank(urls)) {
-            urls = decodeUrl(urls);
+            urls = decodeUrl(urls,encryption);
             String[] images = urls.split("\\|");
             return images[0];
         }
@@ -268,13 +280,20 @@ public class WebUtils {
      *
      * aHR0cHM6Ly9maWxlLmtla2luZy5jbi9kZW1vL%2BS4reaWhy5wcHR4 -> https://file.keking.cn/demo/%E4%B8%AD%E6%96%87.pptx -> https://file.keking.cn/demo/中文.pptx
      */
-    public static String decodeUrl(String source) {
-        String url = decodeBase64String(source, StandardCharsets.UTF_8);
-        if (! StringUtils.isNotBlank(url)){
-            return null;
+    public static String decodeUrl(String source,String encryption) {
+        String url;
+        if(ObjectUtils.isEmpty(encryption) || Objects.equals(ConfigConstants.getaesKey(), "false")){
+            encryption = "base64";
         }
-
-        return url;
+        if(Objects.equals(encryption.toLowerCase(), "aes")){
+            return AESUtil.AesDecrypt(source);
+        }else {
+            url = decodeBase64String(source, StandardCharsets.UTF_8);
+            if(!isValidUrl(url)){
+                url="base641";
+            }
+            return url;
+        }
     }
 
     /**
@@ -299,6 +318,30 @@ public class WebUtils {
             }
             return null;
         }
+    }
+
+    public static String urlSecurity(String url) {
+
+        if (ObjectUtils.isEmpty(url)) {
+            return EMPTY_URL_MSG;
+        }
+        // 检查已知的错误类型
+        String errorMsg = ERROR_MESSAGES.get(url);
+        if (errorMsg != null) {
+            return errorMsg;
+        }
+        // 验证URL格式
+        if (!isValidUrl(url)) {
+            return INVALID_URL_MSG;
+        }
+        // file协议特殊处理
+        if (url.toLowerCase().startsWith("file://")) {
+            // 对于本地文件，可以返回URL本身或进行特殊处理
+            // 根据业务需求决定：返回URL、返回特殊标识或进行本地文件安全检查
+            return url; // 或者返回特殊标识如 "file-protocol"
+        }
+        // 提取主机名
+        return getHost(url);
     }
 
     /**
@@ -370,5 +413,166 @@ public class WebUtils {
             return;
         }
         session.removeAttribute(key);
+    }
+
+    public static boolean validateKey(String key) {
+        String configKey = ConfigConstants.getKey();
+        return !"false".equals(configKey) && !configKey.equals(key);
+    }
+
+    public static String getContentTypeByFilename(String filename) {
+        String extension = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
+        switch (extension) {
+            case "pdf": return "application/pdf";
+            case "jpg": case "jpeg": return "image/jpeg";
+            case "png": return "image/png";
+            case "gif": return "image/gif";
+            case "svg": return "image/svg+xml";
+            case "txt": return "text/plain";
+            case "html": case "htm": return "text/html";
+            case "xml": return "application/xml";
+            case "json": return "application/json";
+            default: return null;
+        }
+    }
+    /**
+     * name pass  获取用户名 和密码
+     */
+    public static String[] namePass(String url,String name) {
+        url= getHost(url);
+        String[] items = name.split(",\\s*");
+        String toRemove = ":";
+        String names = null;
+        String[] parts  = null;
+        try {
+            for (String item : items) {
+                int index = item.indexOf(toRemove);
+                if (index != -1) {
+                    String result = item.substring(0, index);
+                    if (Objects.equals(result, url)) {
+                        names = item;
+                    }
+                }
+            }
+            if (names !=null){
+                parts = names.split(toRemove);
+            }
+        } catch (Exception e) {
+            LOGGER.error("获取认证权限错误：",e);
+        }
+        return parts;
+    }
+
+    /**
+     * 获取Content-Type
+     */
+
+    public static String headersType(ClientHttpResponse fileResponse) {
+        if (fileResponse == null) {
+            return null;
+        }
+        HttpHeaders headers = fileResponse.getHeaders();
+        if (headers == null) {
+            return null;
+        }
+        String contentTypeStr = null;
+        try {
+            // 直接获取Content-Type头字符串
+            contentTypeStr = headers.getFirst(HttpHeaders.CONTENT_TYPE);
+            if (contentTypeStr == null || contentTypeStr.isEmpty()) {
+                return null;
+            }
+            // 解析为MediaType对象
+            MediaType mediaType = MediaType.parseMediaType(contentTypeStr);
+            // 返回主类型和子类型，忽略参数
+            return mediaType.getType() + "/" + mediaType.getSubtype();
+        } catch (Exception e) {
+            // 如果解析失败，尝试简单的字符串处理
+            if (contentTypeStr != null) {
+                // 移除分号及后面的参数
+                int semicolonIndex = contentTypeStr.indexOf(';');
+                if (semicolonIndex > 0) {
+                    return contentTypeStr.substring(0, semicolonIndex).trim();
+                }
+                return contentTypeStr.trim();
+            }
+            return null;
+        }
+    }
+
+    /**
+     * 判断文件是否需要校验MIME类型
+     * @param suffix 文件后缀
+     * @return 是否需要校验
+     */
+    public static boolean isMimeCheckRequired(String suffix) {
+        if (suffix == null) {
+            return false;
+        }
+        String lowerSuffix = suffix.toLowerCase();
+        return Arrays.asList(
+                "doc", "docx", "ppt", "pptx", "pdf", "dwg",
+                "dxf", "dwf", "psd", "wps", "xlsx", "xls",
+                "rar", "zip"
+        ).contains(lowerSuffix);
+    }
+
+    /**
+     * 校验文件MIME类型是否有效
+     * @param contentType 响应头中的Content-Type
+     * @param suffix 文件后缀
+     * @return 是否有效
+     */
+    public static boolean isValidMimeType(String contentType, String suffix) {
+        if (contentType == null || suffix == null) {
+            return true;
+        }
+
+        // 如果检测到是HTML、文本或JSON格式，则认为是错误响应
+        String lowerContentType = contentType.toLowerCase();
+        return !lowerContentType.contains("text/html")
+                && !lowerContentType.contains("text/plain")
+                && !lowerContentType.contains("application/json");
+    }
+
+    /**
+     * 支持basic 下载方法
+     */
+    public static void applyBasicAuthHeaders(HttpHeaders headers, String url) {
+
+        // 从配置文件读取User-Agent，如果没有配置则使用默认值
+        String customUserAgent=ConfigConstants.getUserAgent();
+        String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+        if (!StringUtils.isEmpty(customUserAgent) && !Objects.equals(customUserAgent, "false")) {
+            userAgent = customUserAgent;
+        }
+        headers.set("User-Agent", userAgent);
+        // 获取用户名和密码
+        String username = null;
+        String password = null;
+        // 从basic配置获取
+        String basic = ConfigConstants.getBasicName();
+        if (!StringUtils.isEmpty(basic) && !Objects.equals(basic, "false")) {
+            String[] urlUser = namePass(url, basic);
+            if (urlUser != null && urlUser.length >= 3) {
+                username = urlUser[1];
+                password = urlUser[2];
+            }
+        }
+        // URL参数优先
+        String basicUsername = getUrlParameterReg(url, URL_PARAM_BASIC_NAME);
+        String basicPassword = getUrlParameterReg(url, URL_PARAM_BASIC_PASS);
+
+        if (!StringUtils.isEmpty(basicUsername)) {
+            username = basicUsername;
+            password = basicPassword;
+        }
+
+        // 设置Basic Auth
+        if (!StringUtils.isEmpty(username)) {
+            String plainCredentials = username + ":" + (password != null ? password : "");
+            String base64Credentials = java.util.Base64.getEncoder().encodeToString(plainCredentials.getBytes());
+            headers.set("Authorization", "Basic " + base64Credentials);
+        }
     }
 }

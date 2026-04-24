@@ -21,12 +21,13 @@
 </body>
 
 <script type="text/javascript">
-    var url = '${finalUrl}';
+ 	var url = '${finalUrl}';
+	var kkagent = '${kkagent}';
     var baseUrl = '${baseUrl}'.endsWith('/') ? '${baseUrl}' : '${baseUrl}' + '/';
-    if (!url.startsWith(baseUrl)) {
-        url = baseUrl + 'getCorsFile?urlPath=' + encodeURIComponent(Base64.encode(url));
+    if (kkagent === 'true' || !url.startsWith(baseUrl)) {
+       url = baseUrl + 'getCorsFile?urlPath=' + encodeURIComponent(Base64.encode(url))+ "&key=${kkkey}";
     }
-    document.getElementsByTagName('iframe')[0].src = "${baseUrl}pdfjs/web/viewer.html?file=" + encodeURIComponent(url) + "&disablepresentationmode=${pdfPresentationModeDisable}&disableopenfile=${pdfOpenFileDisable}&disableprint=${pdfPrintDisable}&disabledownload=${pdfDownloadDisable}&disablebookmark=${pdfBookmarkDisable}&disableediting=${pdfDisableEditing}";
+    document.getElementsByTagName('iframe')[0].src = "${baseUrl}pdfjs/web/viewer.html?file=" + encodeURIComponent(url) + "&disablepresentationmode=${pdfPresentationModeDisable}&disableopenfile=${pdfOpenFileDisable}&disableprint=${pdfPrintDisable}&disabledownload=${pdfDownloadDisable}&disablebookmark=${pdfBookmarkDisable}&disableediting=${pdfDisableEditing}#page=1&pagemode=thumbs";
     document.getElementsByTagName('iframe')[0].height = document.documentElement.clientHeight - 10;
     /**
      * 页面变化调整高度
@@ -38,13 +39,6 @@
 
     function goForImage() {
         var url = window.location.href
-        
-        if (url.indexOf("tifPreviewType=pdf") != -1) {
-            url = url.replace("tifPreviewType=pdf", "tifPreviewType=jpg");
-        } else {
-            url = url + "&tifPreviewType=jpg";
-        }
-
         if (url.indexOf("officePreviewType=pdf") != -1) {
             url = url.replace("officePreviewType=pdf", "officePreviewType=image");
         } else {

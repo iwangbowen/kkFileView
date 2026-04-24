@@ -21,6 +21,9 @@ public class CodeFilePreviewImpl implements FilePreview {
     @Override
     public String filePreviewHandle(String url, Model model, FileAttribute fileAttribute) {
          filePreviewHandle.filePreviewHandle(url, model, fileAttribute);
+        String suffix = fileAttribute.getSuffix();
+        boolean isHtmlFile = suffix.equalsIgnoreCase("htm") || suffix.equalsIgnoreCase("html") || suffix.equalsIgnoreCase("shtml");
+        model.addAttribute("isHtmlFile", isHtmlFile);
         return CODE_FILE_PREVIEW_PAGE;
     }
 }

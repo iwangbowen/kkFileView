@@ -1,0 +1,234 @@
+        /* 修复滚动条问题 */
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* 隐藏全局滚动条 */
+        }
+        
+        /* 主容器 - 使用flex布局 */
+        .main-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        /* 目录区域 */
+        #directory {
+            width: 250px;
+            min-width: 250px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden; /* 目录容器不滚动 */
+        }
+        
+        #directory > div:first-child {
+            font-weight: bold;
+            padding: 20px 20px 15px;
+            border-bottom: 1px solid #dee2e6;
+            background: #fff;
+            flex-shrink: 0; /* 防止标题区域被压缩 */
+        }
+        
+        #content {
+            flex: 1;
+            overflow-y: auto; /* 目录内容可以滚动 */
+            padding: 15px;
+        }
+        
+        /* 主内容区域 */
+        .content-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            border: none;
+            box-shadow: none;
+            height: 100%;
+            background: #fff;
+        }
+        
+        .panel-heading {
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+            padding: 15px 20px;
+            flex-shrink: 0;
+        }
+        
+        .view-toggle {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            flex-shrink: 0;
+        }
+        
+        .panel-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto; /* 内容区域可以滚动 */
+            width: 100%;
+        }
+        
+        /* 视图切换按钮样式 */
+        .view-btn {
+            padding: 6px 16px;
+            margin-right: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .view-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        /* 目录列表样式 */
+        #directory ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        
+        #directory li {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        #directory li a {
+            color: #495057;
+            text-decoration: none;
+            font-size: 14px;
+            display: block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        #directory li a:hover {
+            background: #e9ecef;
+            color: #007bff;
+        }
+        
+        .li-h1 { padding-left: 0; font-weight: bold; }
+        .li-h2 { padding-left: 15px; }
+        .li-h3 { padding-left: 30px; font-size: 13px; }
+        .li-h4 { padding-left: 45px; font-size: 13px; }
+        .li-h5 { padding-left: 60px; font-size: 12px; }
+        
+        /* Markdown内容样式 */
+        #markdown {
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        #markdown pre {
+            max-width: 100%;
+            overflow-x: auto;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 18px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        #markdown pre code {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .CodeMirror {
+            height: auto;
+            min-height: 100%;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        /* 确保表格等元素也能自适应 */
+        #markdown table {
+            max-width: 100%;
+            overflow-x: auto;
+            display: block;
+        }
+        
+        #markdown img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        /* 空目录提示 */
+        .empty-toc {
+            color: #6c757d;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            #directory {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+                border-right: none;
+                border-bottom: 1px solid #dee2e6;
+            }
+            
+            #content {
+                max-height: 150px;
+            }
+        }
+		
+		.highlight-keyword {
+    background-color: #ff0;
+    color: #000;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+        
+        /* 自定义滚动条样式 */
+        #content::-webkit-scrollbar,
+        .panel-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #content::-webkit-scrollbar-track,
+        .panel-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        #content::-webkit-scrollbar-thumb,
+        .panel-body::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        #content::-webkit-scrollbar-thumb:hover,
+        .panel-body::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }

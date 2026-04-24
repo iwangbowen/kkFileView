@@ -146,10 +146,14 @@ trust.host = *
 
 ### Q4: 如何允许子域名？
 
-目前不支持通配符域名匹配，需要明确列出每个子域名：
+已支持通配符域名匹配，可使用 `*.example.com`：
 ```properties
-trust.host = cdn.example.com,api.example.com,storage.example.com
+trust.host = *.example.com
 ```
+
+说明：
+- `*.example.com` 会匹配 `cdn.example.com`、`api.internal.example.com`，但不匹配根域 `example.com`
+- 对于 IP 风格通配（如 `192.168.*`、`10.*`），仅匹配字面量 IPv4 地址，不匹配域名
 
 ## 🚨 安全事件响应
 

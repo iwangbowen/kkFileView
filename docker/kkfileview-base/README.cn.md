@@ -7,10 +7,10 @@
 然后使用 kkfileview-base 作为基础镜像进行构建，加快 kkfileview docker 镜像构建与发布。
 
 执行如下命令即可构建基础镜像：
-> 这里镜像 tag 以 4.4.0 为例，本项目所维护的 Dockerfile 文件考虑了跨平台兼容性。 如果你需要用到 arm64 架构镜像, 则在arm64 架构机器上同样执行下面的构建命令即可
+> 这里镜像 tag 以 5.0.0 为例，本项目所维护的 Dockerfile 文件考虑了跨平台兼容性。 如果你需要用到 arm64 架构镜像, 则在arm64 架构机器上同样执行下面的构建命令即可
 
 ```shell
-docker build --tag keking/kkfileview-base:4.4.0 .
+docker build --tag keking/kkfileview-base:5.0.0 .
 ```
 
 
@@ -46,5 +46,5 @@ docker build --tag keking/kkfileview-base:4.4.0 .
 现在就可以愉快地开始构建了，构建命令示例:
 
 ```shell
-docker buildx build --platform=linux/amd64,linux/arm64 -t keking/kkfileview-base:4.4.0 --push .
+docker buildx build --platform=linux/amd64,linux/arm64 -t keking/kkfileview-base:5.0.0 --push .
 ```

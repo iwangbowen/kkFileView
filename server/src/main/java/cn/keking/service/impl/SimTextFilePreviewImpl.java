@@ -8,27 +8,36 @@ import cn.keking.service.FilePreview;
 import cn.keking.utils.DownloadUtils;
 import cn.keking.utils.EncodingDetects;
 import cn.keking.utils.KkFileUtils;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.springframework.web.util.HtmlUtils;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 /**
  * Created by kl on 2018/1/17.
  * Content :处理文本文件
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class SimTextFilePreviewImpl implements FilePreview {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimTextFilePreviewImpl.class);
 
     private final FileHandlerService fileHandlerService;
     private final OtherFilePreviewImpl otherFilePreview;
+
+    public SimTextFilePreviewImpl(FileHandlerService fileHandlerService, OtherFilePreviewImpl otherFilePreview) {
+        this.fileHandlerService = fileHandlerService;
+        this.otherFilePreview = otherFilePreview;
+    }
 
     @Override
     public String filePreviewHandle(String url, Model model, FileAttribute fileAttribute) {
@@ -56,7 +65,7 @@ public class SimTextFilePreviewImpl implements FilePreview {
         try {
             fileData = HtmlUtils.htmlEscape(textData(filePath,fileName));
         } catch (IOException e) {
-            log.error("读取文本文件失败: {}", filePath, e);
+            LOGGER.error("读取文本文件失败: {}", filePath, e);
         }
         model.addAttribute("textData", Base64.encodeBase64String(fileData.getBytes(StandardCharsets.UTF_8)));
         return TXT_FILE_PREVIEW_PAGE;
@@ -68,7 +77,7 @@ public class SimTextFilePreviewImpl implements FilePreview {
             return null;
         }
         if (!file.exists() || file.length() == 0) {
-            return "";
+            return "KK提醒您：文件不存在或者已经被删除了!";
         } else {
             String charset = EncodingDetects.getJavaEncode(filePath);
             if ("ASCII".equals(charset)) {

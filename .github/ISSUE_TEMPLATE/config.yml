@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "Security Report / 安全漏洞报告"
+    url: "https://github.com/kekingcn/kkFileView/security/advisories/new"
+    about: "For sensitive security issues, please use private security report. / 涉及敏感安全问题请使用私密安全报告。"

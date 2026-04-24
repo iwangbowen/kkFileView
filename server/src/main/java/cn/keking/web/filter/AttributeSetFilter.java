@@ -47,6 +47,14 @@ public class AttributeSetFilter implements Filter {
         request.setAttribute("homePagination", ConfigConstants.getHomePagination());
         request.setAttribute("homePageSize", ConfigConstants.getHomePageSize());
         request.setAttribute("homeSearch", ConfigConstants.getHomeSearch());
+        request.setAttribute("isshowaeskey", ConfigConstants.getisShowaesKey());
+        request.setAttribute("isjavascript", ConfigConstants.getisJavaScript());
+        request.setAttribute("xlsxallowEdit", ConfigConstants.getxlsxAllowEdit());
+        request.setAttribute("xlsxshowtoolbar", ConfigConstants.getxlsxShowtoolbar());
+        request.setAttribute("aeskey", ConfigConstants.getaesKey());
+        request.setAttribute("isshowkey", ConfigConstants.getisShowKey());
+        request.setAttribute("kkkey", ConfigConstants.getKey());
+        request.setAttribute("scriptjs", ConfigConstants.getscriptJs());
     }
 
     /**

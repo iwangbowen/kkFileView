@@ -4,7 +4,7 @@ import java.util.BitSet;
 
 public class UrlEncoderUtils {
 
-    private static BitSet dontNeedEncoding;
+    private static final BitSet dontNeedEncoding;
 
     static {
         dontNeedEncoding = new BitSet(256);
@@ -19,7 +19,7 @@ public class UrlEncoderUtils {
             dontNeedEncoding.set(i);
         }
         dontNeedEncoding.set('+');
-        /**
+        /*
          * 这里会有误差,比如输入一个字符串 123+456,它到底是原文就是123+456还是123 456做了urlEncode后的内容呢？<br>
          * 其实问题是一样的，比如遇到123%2B456,它到底是原文即使如此，还是123+456 urlEncode后的呢？ <br>
          * 在这里，我认为只要符合urlEncode规范的，就当作已经urlEncode过了<br>
@@ -36,13 +36,10 @@ public class UrlEncoderUtils {
      * 判断str是否urlEncoder.encode过<br>
      * 经常遇到这样的情况，拿到一个URL,但是搞不清楚到底要不要encode.<Br>
      * 不做encode吧，担心出错，做encode吧，又怕重复了<Br>
-     *
-     * @param str
-     * @return
      */
     public static boolean hasUrlEncoded(String str) {
 
-        /**
+        /*
          * 支持JAVA的URLEncoder.encode出来的string做判断。 即: 将' '转成'+' <br>
          * 0-9a-zA-Z保留 <br>
          * '-'，'_'，'.'，'*'保留 <br>
@@ -51,7 +48,7 @@ public class UrlEncoderUtils {
         boolean needEncode = false;
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
-            if (dontNeedEncoding.get((int) c)) {
+            if (dontNeedEncoding.get(c)) {
                 continue;
             }
             if (c == '%' && (i + 2) < str.length()) {
@@ -72,9 +69,6 @@ public class UrlEncoderUtils {
 
     /**
      * 判断c是否是16进制的字符
-     *
-     * @param c
-     * @return
      */
     private static boolean isDigit16Char(char c) {
         return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F');

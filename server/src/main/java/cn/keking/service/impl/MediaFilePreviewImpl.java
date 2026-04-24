@@ -6,24 +6,25 @@ import cn.keking.model.FileType;
 import cn.keking.model.ReturnResponse;
 import cn.keking.service.FileHandlerService;
 import cn.keking.service.FilePreview;
+import cn.keking.service.Mediatomp4Service;
 import cn.keking.utils.DownloadUtils;
-import org.bytedeco.ffmpeg.global.avcodec;
-import org.bytedeco.javacv.FFmpegFrameGrabber;
-import org.bytedeco.javacv.FFmpegFrameRecorder;
-import org.bytedeco.javacv.Frame;
+import cn.keking.utils.FileConvertStatusManager;
+import cn.keking.utils.KkFileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
-import org.springframework.util.ObjectUtils;
 
 import java.io.File;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author : kl
  * @authorboke : kailing.pub
  * @create : 2018-03-25 上午11:58
- * @description:
+ * @description: 异步视频文件预览实现
  **/
 @Service
 public class MediaFilePreviewImpl implements FilePreview {
@@ -31,11 +32,20 @@ public class MediaFilePreviewImpl implements FilePreview {
     private static final Logger logger = LoggerFactory.getLogger(MediaFilePreviewImpl.class);
     private final FileHandlerService fileHandlerService;
     private final OtherFilePreviewImpl otherFilePreview;
-    private static final String mp4 = "mp4";
+    private final Mediatomp4Service mediatomp4Service;
+    private final OfficeFilePreviewImpl officefilepreviewimpl;
 
-    public MediaFilePreviewImpl(FileHandlerService fileHandlerService, OtherFilePreviewImpl otherFilePreview) {
+    // 用于处理回调的线程池
+    private static final ExecutorService callbackExecutor = Executors.newFixedThreadPool(3);
+
+    public MediaFilePreviewImpl(FileHandlerService fileHandlerService,
+                                OtherFilePreviewImpl otherFilePreview,
+                                Mediatomp4Service mediatomp4Service,
+                                OfficeFilePreviewImpl officefilepreviewimpl) {
         this.fileHandlerService = fileHandlerService;
         this.otherFilePreview = otherFilePreview;
+        this.mediatomp4Service = mediatomp4Service;
+        this.officefilepreviewimpl = officefilepreviewimpl;
     }
 
     @Override
@@ -46,122 +56,140 @@ public class MediaFilePreviewImpl implements FilePreview {
         String outFilePath = fileAttribute.getOutFilePath();
         boolean forceUpdatedCache = fileAttribute.forceUpdatedCache();
         FileType type = fileAttribute.getType();
-        String[] mediaTypesConvert = FileType.MEDIA_CONVERT_TYPES;  //获取支持的转换格式
+
+        // 检查是否是需要转换的视频格式
         boolean mediaTypes = false;
+        String[] mediaTypesConvert = FileType.MEDIA_CONVERT_TYPES;
         for (String temp : mediaTypesConvert) {
-            if (suffix.equals(temp)) {
+            if (suffix.equalsIgnoreCase(temp)) {
                 mediaTypes = true;
                 break;
             }
         }
-        if (!url.toLowerCase().startsWith("http") || checkNeedConvert(mediaTypes)) {  //不是http协议的 //   开启转换方式并是支持转换格式的
-            if (forceUpdatedCache || !fileHandlerService.listConvertedFiles().containsKey(cacheName) || !ConfigConstants.isCacheEnabled()) {  //查询是否开启缓存
-                ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, fileName);
-                if (response.isFailure()) {
-                    return otherFilePreview.notSupportedFile(model, fileAttribute, response.getMsg());
+        // 查询转换状态
+        String statusResult = officefilepreviewimpl.checkAndHandleConvertStatus(model, fileName, cacheName, fileAttribute);
+        if (statusResult != null) {
+            return statusResult;
+        }
+        // 非HTTP协议或需要转换的文件
+        if (!url.toLowerCase().startsWith("http") || checkNeedConvert(mediaTypes)) {
+            // 检查缓存
+            File outputFile = new File(outFilePath);
+            if (outputFile.exists() && !forceUpdatedCache && ConfigConstants.isCacheEnabled()) {
+                String relativePath = fileHandlerService.getRelativePath(outFilePath);
+                if (fileHandlerService.listConvertedMedias().containsKey(cacheName)) {
+                    model.addAttribute("mediaUrl", relativePath);
+                    return MEDIA_FILE_PREVIEW_PAGE;
                 }
-                String filePath = response.getContent();
-                String convertedUrl = null;
+            }
+            // 下载文件
+            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, fileName);
+            if (response.isFailure()) {
+                return otherFilePreview.notSupportedFile(model, fileAttribute, response.getMsg());
+            }
+            String filePath = response.getContent();
+            if (mediaTypes) {
+                // 检查文件大小限制
+                if (isFileSizeExceeded(filePath)) {
+                    return otherFilePreview.notSupportedFile(model, fileAttribute,
+                            "视频文件大小超过" + ConfigConstants.getMediaConvertMaxSize() + "MB限制，禁止转换");
+                }
                 try {
-                    if (mediaTypes) {
-                        convertedUrl = convertToMp4(filePath, outFilePath, fileAttribute);
-                    } else {
-                        convertedUrl = outFilePath;  //其他协议的  不需要转换方式的文件 直接输出
-                    }
+                    // 启动异步转换，并添加回调处理
+                    startAsyncConversion(filePath, outFilePath, cacheName, fileAttribute);
+					int refreshSchedule = ConfigConstants.getTime();
+                    // 返回等待页面
+                    model.addAttribute("fileName", fileName);
+					model.addAttribute("time", refreshSchedule);
+                    model.addAttribute("message", "视频文件正在转换中，请稍候...");
+                    return WAITING_FILE_PREVIEW_PAGE;
                 } catch (Exception e) {
-                    logger.error("Failed to convert media file: {}", filePath, e);
-                }
-                if (convertedUrl == null) {
+                    logger.error("Failed to start video conversion: {}", filePath, e);
                     return otherFilePreview.notSupportedFile(model, fileAttribute, "视频转换异常，请联系管理员");
                 }
-                if (ConfigConstants.isCacheEnabled()) {
-                    // 加入缓存
-                    fileHandlerService.addConvertedFile(cacheName, fileHandlerService.getRelativePath(outFilePath));
-                }
-                model.addAttribute("mediaUrl", fileHandlerService.getRelativePath(outFilePath));
             } else {
-                model.addAttribute("mediaUrl", fileHandlerService.listConvertedFiles().get(cacheName));
+                // 不需要转换的文件，直接返回
+                model.addAttribute("mediaUrl", fileHandlerService.getRelativePath(outFilePath));
+                return MEDIA_FILE_PREVIEW_PAGE;
             }
-            return MEDIA_FILE_PREVIEW_PAGE;
         }
-        if (type.equals(FileType.MEDIA)) {  // 支持输出 只限默认格式
+        // HTTP协议的媒体文件，直接播放
+        if (type.equals(FileType.MEDIA)) {
             model.addAttribute("mediaUrl", url);
             return MEDIA_FILE_PREVIEW_PAGE;
         }
+
         return otherFilePreview.notSupportedFile(model, fileAttribute, "系统还不支持该格式文件的在线预览");
     }
 
     /**
-     * 检查视频文件转换是否已开启，以及当前文件是否需要转换
-     *
-     * @return
+     * 启动异步转换，并在转换完成后处理后续操作
+     */
+    private void startAsyncConversion(String filePath, String outFilePath,
+                                      String cacheName, FileAttribute fileAttribute) {
+        // 启动异步转换
+        CompletableFuture<Boolean> conversionFuture = mediatomp4Service.convertToMp4Async(
+                filePath,
+                outFilePath,
+                cacheName,
+                fileAttribute
+        );
+
+        // 添加转换完成后的回调
+        conversionFuture.whenCompleteAsync((success, throwable) -> {
+            if (success != null && success) {
+                try {
+                    // 1. 是否保留源文件（只在转换成功后才删除）
+                    if (!fileAttribute.isCompressFile() && ConfigConstants.getDeleteSourceFile()) {
+                        KkFileUtils.deleteFileByPath(filePath);
+                    }
+                    // 2. 加入视频缓存（只在转换成功后才添加）
+                    if (ConfigConstants.isCacheEnabled()) {
+                        fileHandlerService.addConvertedMedias(cacheName,
+                                fileHandlerService.getRelativePath(outFilePath));
+                    }
+                } catch (Exception e) {
+                    logger.error("视频转换后续处理失败: {}", filePath, e);
+                }
+            } else {
+                // 转换失败，保留源文件供排查问题
+                logger.error("视频转换失败，保留源文件: {}", filePath);
+                if (throwable != null) {
+                    logger.error("视频转换失败原因: ", throwable);
+                }
+            }
+        }, callbackExecutor);
+    }
+
+    /**
+     * 检查文件大小是否超过限制
+     */
+    private boolean isFileSizeExceeded(String filePath) {
+        try {
+            File inputFile = new File(filePath);
+            if (inputFile.exists()) {
+                long fileSizeMB = inputFile.length() / (1024 * 1024);
+                int maxSizeMB = ConfigConstants.getMediaConvertMaxSize();
+
+                if (fileSizeMB > maxSizeMB) {
+                    logger.warn("视频文件大小超过限制: {}MB > {}MB", fileSizeMB, maxSizeMB);
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            logger.error("检查文件大小时出错: {}", filePath, e);
+        }
+        return false;
+    }
+
+    /**
+     * 检查是否需要转换
      */
     private boolean checkNeedConvert(boolean mediaTypes) {
-        //1.检查开关是否开启
+        // 检查转换开关是否开启
         if ("true".equals(ConfigConstants.getMediaConvertDisable())) {
             return mediaTypes;
         }
         return false;
     }
-
-    private static String convertToMp4(String filePath, String outFilePath, FileAttribute fileAttribute) throws Exception {
-        FFmpegFrameGrabber frameGrabber = FFmpegFrameGrabber.createDefault(filePath);
-        Frame captured_frame;
-        FFmpegFrameRecorder recorder = null;
-        try {
-            File desFile = new File(outFilePath);
-            //判断一下防止重复转换
-            if (desFile.exists()) {
-                return outFilePath;
-            }
-            if (fileAttribute.isCompressFile()) { //判断 是压缩包的创建新的目录
-                int index = outFilePath.lastIndexOf("/");  //截取最后一个斜杠的前面的内容
-                String folder = outFilePath.substring(0, index);
-                File path = new File(folder);
-                //目录不存在 创建新的目录
-                if (!path.exists()) {
-                    path.mkdirs();
-                }
-            }
-            frameGrabber.start();
-            recorder = new FFmpegFrameRecorder(outFilePath, frameGrabber.getImageWidth(), frameGrabber.getImageHeight(), frameGrabber.getAudioChannels());
-            // recorder.setImageHeight(640);
-            // recorder.setImageWidth(480);
-            recorder.setFormat(mp4);
-            recorder.setFrameRate(frameGrabber.getFrameRate());
-            recorder.setSampleRate(frameGrabber.getSampleRate());
-            //视频编码属性配置 H.264 H.265 MPEG
-            recorder.setVideoCodec(avcodec.AV_CODEC_ID_H264);
-            //设置视频比特率,单位:b
-            recorder.setVideoBitrate(frameGrabber.getVideoBitrate());
-            recorder.setAspectRatio(frameGrabber.getAspectRatio());
-            // 设置音频通用编码格式
-            recorder.setAudioCodec(avcodec.AV_CODEC_ID_AAC);
-            //设置音频比特率,单位:b (比特率越高，清晰度/音质越好，当然文件也就越大 128000 = 182kb)
-            recorder.setAudioBitrate(frameGrabber.getAudioBitrate());
-            recorder.setAudioOptions(frameGrabber.getAudioOptions());
-            recorder.setAudioChannels(frameGrabber.getAudioChannels());
-            recorder.start();
-            while (true) {
-                captured_frame = frameGrabber.grabFrame();
-                if (captured_frame == null) {
-                    System.out.println("转码完成:" + filePath);
-                    break;
-                }
-                recorder.record(captured_frame);
-            }
-        } catch (Exception e) {
-            logger.error("Failed to convert video file to mp4: {}", filePath, e);
-            return null;
-        } finally {
-            if (recorder != null) {   //关闭
-                recorder.stop();
-                recorder.close();
-            }
-            frameGrabber.stop();
-            frameGrabber.close();
-        }
-        return outFilePath;
-    }
-
 }

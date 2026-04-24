@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+    <title>heic</title>
+    <style>
+     body {
+            background-color: #404040;
+        }
+        .container {
+            width: 100%;
+            height: 100%;
+        }
+        .my-photo {
+            max-width: 98%;
+            margin:0 auto;
+            border-radius:3px;
+            box-shadow:rgba(0,0,0,0.15) 0 0 8px;
+            background:#FBFBFB;
+            border:1px solid #ddd;
+            margin:1px auto;
+            margin-left: 15px;
+            padding:5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <img class="my-photo" src="https://vkceyugu.cdn.bspapp.com/VKCEYUGU-cc8cf08f-49f5-4fc5-83c3-ed2a683704d4/dbd3fea0-df18-4a10-8ccf-26b5de1ee42f.heic" alt="heic2" />
+</div>
+<script>
+    (function() {
+        document.querySelectorAll('img').forEach(async x => {
+            if (x.src.match(/\.(hei[cf]|avif)\b/i)) {
+                x.addEventListener('error', async function() {
+                    if (!document.ConvertHeicToPng) {
+                        if (!document.LoadConvertHeicToPng) {
+                            document.LoadConvertHeicToPng = import('/heif/src/index.js');
+                        }
+                        await document.LoadConvertHeicToPng;
+                    }
+                    x.title = x.alt;
+                    x.src = await document.ConvertHeicToPng(x.src, stat => x.alt = stat);
+                })
+            }
+        });
+
+    })()
+</script>
+</body>
+</html>

@@ -4,35 +4,18 @@ import cn.keking.config.ConfigConstants;
 import cn.keking.model.FileAttribute;
 import cn.keking.model.FileType;
 import cn.keking.service.cache.CacheService;
-import cn.keking.service.cache.NotResourceCache;
-import cn.keking.utils.EncodingDetects;
-import cn.keking.utils.KkFileUtils;
-import cn.keking.utils.UrlEncoderUtils;
-import cn.keking.utils.WebUtils;
+import cn.keking.utils.*;
 import cn.keking.web.filter.BaseUrlFilter;
-import com.aspose.cad.*;
-import com.aspose.cad.fileformats.cad.CadDrawTypeMode;
-import com.aspose.cad.fileformats.tiff.enums.TiffExpectedFormat;
-import com.aspose.cad.imageoptions.*;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
-import org.apache.pdfbox.tools.imageio.ImageIOUtil;
-import org.apache.poi.EncryptedDocumentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.awt.image.BufferedImage;
+
 import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -41,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.*;
 import java.util.stream.IntStream;
 
 /**
@@ -50,10 +32,10 @@ import java.util.stream.IntStream;
  */
 @Component
 @DependsOn(ConfigConstants.BEAN_NAME)
-public class FileHandlerService implements InitializingBean {
+public class FileHandlerService {
 
     private static final String PDF2JPG_IMAGE_FORMAT = ".jpg";
-    private static final String PDF_PASSWORD_MSG = "password";
+
     private final Logger logger = LoggerFactory.getLogger(FileHandlerService.class);
     private final String fileDir = ConfigConstants.getFileDir();
     private final CacheService cacheService;
@@ -147,15 +129,6 @@ public class FileHandlerService implements InitializingBean {
         cacheService.putImgCache(fileKey, imgs);
     }
 
-    /**
-     * cad定义线程池
-     */
-    private ExecutorService pool = null;
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        pool = Executors.newFixedThreadPool(ConfigConstants.getCadThread());
-    }
 
     /**
      * 对转换后的文件进行操作(改变编码方式)
@@ -195,18 +168,20 @@ public class FileHandlerService implements InitializingBean {
      * @param index       图片索引
      * @return 图片访问地址
      */
-    private String getPdf2jpgUrl(String pdfFilePath, int index) {
+    public String getPdf2jpgUrl(String pdfFilePath, int index) {
         String baseUrl = BaseUrlFilter.getBaseUrl();
         pdfFilePath = pdfFilePath.replace(fileDir, "");
         String pdfFolder = pdfFilePath.substring(0, pdfFilePath.length() - 4);
-        String urlPrefix;
-        try {
-            urlPrefix = baseUrl + URLEncoder.encode(pdfFolder, uriEncoding).replaceAll("\\+", "%20");
-        } catch (UnsupportedEncodingException e) {
-            logger.error("UnsupportedEncodingException", e);
-            urlPrefix = baseUrl + pdfFolder;
-        }
-        return urlPrefix + "/" + index + PDF2JPG_IMAGE_FORMAT;
+        // 对整个路径进行编码，包括特殊字符
+        String encodedPath = URLEncoder.encode(pdfFolder, StandardCharsets.UTF_8);
+        encodedPath = encodedPath
+                .replaceAll("%2F", "/")  // 恢复斜杠
+                .replaceAll("%5C", "/")  // 恢复反斜杠
+                .replaceAll("\\+", "%20");  // 空格处理
+        // 构建URL：使用_作为分隔符（这是kkFileView压缩包预览的常见格式）
+        String url = baseUrl + encodedPath + "/" + index + PDF2JPG_IMAGE_FORMAT;
+        return url;
+
     }
 
     /**
@@ -215,225 +190,20 @@ public class FileHandlerService implements InitializingBean {
      * @param pdfFilePath pdf文件路径
      * @return 图片访问集合
      */
-    private List<String> loadPdf2jpgCache(String pdfFilePath) {
+    public List<String> loadPdf2jpgCache(String pdfFilePath) {  // 移除 static 修饰符
         List<String> imageUrls = new ArrayList<>();
-        Integer imageCount = this.getPdf2jpgCache(pdfFilePath);
+        Integer imageCount = this.getPdf2jpgCache(pdfFilePath);  // 使用 this. 调用
         if (Objects.isNull(imageCount)) {
             return imageUrls;
         }
         IntStream.range(0, imageCount).forEach(i -> {
-            String imageUrl = this.getPdf2jpgUrl(pdfFilePath, i);
+            String imageUrl = this.getPdf2jpgUrl(pdfFilePath, i);  // 使用 this. 调用
             imageUrls.add(imageUrl);
         });
         return imageUrls;
     }
 
-    /**
-     * pdf文件转换成jpg图片集
-     * fileNameFilePath pdf文件路径
-     * pdfFilePath pdf输出文件路径
-     * pdfName     pdf文件名称
-     * loadPdf2jpgCache 图片访问集合
-     */
-    public List<String> pdf2jpg(String fileNameFilePath, String pdfFilePath, String pdfName, FileAttribute fileAttribute) throws Exception {
-        boolean forceUpdatedCache = fileAttribute.forceUpdatedCache();
-        boolean usePasswordCache = fileAttribute.getUsePasswordCache();
-        String filePassword = fileAttribute.getFilePassword();
-        PDDocument doc;
-        final String[] pdfPassword = {null};
-        final int[] pageCount = new int[1];
-        if (!forceUpdatedCache) {
-            List<String> cacheResult = this.loadPdf2jpgCache(pdfFilePath);
-            if (!CollectionUtils.isEmpty(cacheResult)) {
-                return cacheResult;
-            }
-        }
-        List<String> imageUrls = new ArrayList<>();
-        File pdfFile = new File(fileNameFilePath);
-        if (!pdfFile.exists()) {
-            return null;
-        }
-        int index = pdfFilePath.lastIndexOf(".");
-        String folder = pdfFilePath.substring(0, index);
-        File path = new File(folder);
-        if (!path.exists() && !path.mkdirs()) {
-            logger.error("创建转换文件【{}】目录失败，请检查目录权限！", folder);
-        }
-        try {
-            doc = Loader.loadPDF(pdfFile, filePassword);
-            doc.setResourceCache(new NotResourceCache());
-            pageCount[0] = doc.getNumberOfPages();
-        } catch (IOException e) {
-            Throwable[] throwableArray = ExceptionUtils.getThrowables(e);
-            for (Throwable throwable : throwableArray) {
-                if (throwable instanceof IOException || throwable instanceof EncryptedDocumentException) {
-                    if (e.getMessage().toLowerCase().contains(PDF_PASSWORD_MSG)) {
-                        pdfPassword[0] = PDF_PASSWORD_MSG;  //查询到该文件是密码文件 输出带密码的值
-                    }
-                }
-            }
-            if (!PDF_PASSWORD_MSG.equals(pdfPassword[0])) {  //该文件异常 错误原因非密码原因输出错误
-                logger.error("Convert pdf exception, pdfFilePath：{}", pdfFilePath, e);
-            }
-            throw new Exception(e);
-        }
-        Callable <List<String>> call = () ->  {
-            try {
-                String imageFilePath;
-                BufferedImage image = null;
-                PDFRenderer pdfRenderer = new PDFRenderer(doc);
-                pdfRenderer.setSubsamplingAllowed(true);
-                for (int pageIndex = 0; pageIndex < pageCount[0]; pageIndex++) {
-                    imageFilePath = folder + File.separator + pageIndex + PDF2JPG_IMAGE_FORMAT;
-                    image = pdfRenderer.renderImageWithDPI(pageIndex, ConfigConstants.getPdf2JpgDpi(), ImageType.RGB);
-                    ImageIOUtil.writeImage(image, imageFilePath, ConfigConstants.getPdf2JpgDpi());
-                    String imageUrl = this.getPdf2jpgUrl(pdfFilePath, pageIndex);
-                    imageUrls.add(imageUrl);
-                }
-                image.flush();
-            } catch (IOException e) {
-                throw new Exception(e);
-            } finally {
-                doc.close();
-            }
-            return imageUrls;
-        };
-        Future<List<String>> result = pool.submit(call);
-        int pdftimeout;
-        if(pageCount[0] <=50){
-            pdftimeout = ConfigConstants.getPdfTimeout();
-        }else if(pageCount[0] <=200){
-            pdftimeout = ConfigConstants.getPdfTimeout80();
-        }else {
-            pdftimeout = ConfigConstants.getPdfTimeout200();
-        }
-        try {
-            result.get(pdftimeout, TimeUnit.SECONDS);
-            // 如果在超时时间内，没有数据返回：则抛出TimeoutException异常
-        } catch (InterruptedException | ExecutionException e) {
-            throw new Exception(e);
-        } catch (TimeoutException e) {
-            throw new Exception("overtime");
-        } finally {
-            //关闭
-            doc.close();
-        }
-        if (usePasswordCache || ObjectUtils.isEmpty(filePassword)) {   //加密文件  判断是否启用缓存命令
-            this.addPdf2jpgCache(pdfFilePath, pageCount[0]);
-        }
-        return imageUrls;
-    }
 
-    /**
-     * cad文件转pdf
-     *
-     * @param inputFilePath  cad文件路径
-     * @param outputFilePath pdf输出文件路径
-     * @return 转换是否成功
-     */
-    public String cadToPdf(String inputFilePath, String outputFilePath, String cadPreviewType, FileAttribute fileAttribute) throws Exception {
-        final InterruptionTokenSource source = new InterruptionTokenSource();//CAD延时
-        final SvgOptions SvgOptions = new SvgOptions();
-        final PdfOptions pdfOptions = new PdfOptions();
-        final  TiffOptions TiffOptions =  new TiffOptions(TiffExpectedFormat.TiffJpegRgb);
-        if (fileAttribute.isCompressFile()) { //判断 是压缩包的创建新的目录
-            int index = outputFilePath.lastIndexOf("/");  //截取最后一个斜杠的前面的内容
-            String folder = outputFilePath.substring(0, index);
-            File path = new File(folder);
-            //目录不存在 创建新的目录
-            if (!path.exists()) {
-                path.mkdirs();
-            }
-        }
-        File outputFile = new File(outputFilePath);
-        try {
-            LoadOptions opts = new LoadOptions();
-            opts.setSpecifiedEncoding(CodePages.SimpChinese);
-            final Image cadImage = Image.load(inputFilePath, opts);
-            try {
-                RasterizationQuality rasterizationQuality = new RasterizationQuality();
-                rasterizationQuality.setArc(RasterizationQualityValue.High);
-                rasterizationQuality.setHatch(RasterizationQualityValue.High);
-                rasterizationQuality.setText(RasterizationQualityValue.High);
-                rasterizationQuality.setOle(RasterizationQualityValue.High);
-                rasterizationQuality.setObjectsPrecision(RasterizationQualityValue.High);
-                rasterizationQuality.setTextThicknessNormalization(true);
-                CadRasterizationOptions cadRasterizationOptions = new CadRasterizationOptions();
-                cadRasterizationOptions.setBackgroundColor(Color.getWhite());
-                cadRasterizationOptions.setPageWidth(cadImage.getWidth());
-                cadRasterizationOptions.setPageHeight(cadImage.getHeight());
-                cadRasterizationOptions.setUnitType(cadImage.getUnitType());
-                cadRasterizationOptions.setAutomaticLayoutsScaling(false);
-                cadRasterizationOptions.setNoScaling(false);
-                cadRasterizationOptions.setQuality(rasterizationQuality);
-                cadRasterizationOptions.setDrawType(CadDrawTypeMode.UseObjectColor);
-                cadRasterizationOptions.setExportAllLayoutContent(true);
-                cadRasterizationOptions.setVisibilityMode(VisibilityMode.AsScreen);
-                switch (cadPreviewType) {  //新增格式方法
-                    case "svg":
-                        SvgOptions.setVectorRasterizationOptions(cadRasterizationOptions);
-                        SvgOptions.setInterruptionToken(source.getToken());
-                        break;
-                    case "pdf":
-                        pdfOptions.setVectorRasterizationOptions(cadRasterizationOptions);
-                        pdfOptions.setInterruptionToken(source.getToken());
-                        break;
-                    case "tif":
-                        TiffOptions.setVectorRasterizationOptions(cadRasterizationOptions);
-                        TiffOptions.setInterruptionToken(source.getToken());
-                        break;
-                }
-                Callable<String> call = ()  ->  {
-                    try (OutputStream stream = new FileOutputStream(outputFile)) {
-                        switch (cadPreviewType) {
-                            case "svg":
-                                cadImage.save(stream, SvgOptions);
-                                break;
-                            case "pdf":
-                                cadImage.save(stream, pdfOptions);
-                                break;
-                            case "tif":
-                                cadImage.save(stream, TiffOptions);
-                                break;
-                        }
-                    } catch (IOException e) {
-                        logger.error("CADFileNotFoundException，inputFilePath：{}", inputFilePath, e);
-                        return null;
-                    } finally {
-                        cadImage.dispose();
-                        source.interrupt();  //结束任务
-                        source.dispose();
-                    }
-                    return "true";
-                };
-                Future<String> result = pool.submit(call);
-                try {
-                    result.get(Long.parseLong(ConfigConstants.getCadTimeout()), TimeUnit.SECONDS);
-                    // 如果在超时时间内，没有数据返回：则抛出TimeoutException异常
-                } catch (InterruptedException e) {
-                    logger.error("CAD转换文件异常：", e);
-                    return null;
-                } catch (ExecutionException e) {
-                    logger.error("CAD转换在尝试取得任务结果时出错：", e);
-                    return null;
-                } catch (TimeoutException e) {
-                    logger.error("CAD转换时间超时：", e);
-                    return null;
-                } finally {
-                    source.interrupt();  //结束任务
-                    source.dispose();
-                    cadImage.dispose();
-                    // pool.shutdownNow();
-                }
-            } finally {
-                source.dispose();
-                cadImage.dispose();
-            }
-        } finally {
-            source.dispose();
-        }
-        return "true";
-    }
 
     /**
      * @param str    原字符串（待截取原串）
@@ -474,7 +244,7 @@ public class FileHandlerService implements InitializingBean {
         boolean isCompressFile = !ObjectUtils.isEmpty(compressFileKey);
         if (isCompressFile) {  //判断是否使用特定压缩包符号
             try {
-                originFileName = URLDecoder.decode(originFileName, uriEncoding);  //转义的文件名 解下出原始文件名
+                originFileName = URLDecoder.decode(compressFilePath, uriEncoding);  //转义的文件名 解下出原始文件名
                 attribute.setSkipDownLoad(true);
             } catch (UnsupportedEncodingException e) {
                 logger.error("Failed to decode file name: {}", originFileName, e);
@@ -484,12 +254,23 @@ public class FileHandlerService implements InitializingBean {
             try {
                 originFileName = URLDecoder.decode(originFileName, uriEncoding);  //转义的文件名 解下出原始文件名
             } catch (UnsupportedEncodingException e) {
-                logger.error("Failed to decode file name: {}", originFileName, e);
+                e.printStackTrace();
             }
         }else {
-            url = WebUtils.encodeUrlFileName(url); //对未转义的url进行转义
+            url = Objects.requireNonNull(WebUtils.encodeUrlFileName(url))
+                    .replaceAll("\\+", "%20")
+                    .replaceAll("%3A", ":")
+                    .replaceAll("%2F", "/")
+                    .replaceAll("%3F", "?")
+                    .replaceAll("%26", "&")
+                    .replaceAll("%3D", "=");
+
         }
         originFileName = KkFileUtils.htmlEscape(originFileName);  //文件名处理
+        if (!KkFileUtils.validateFileNameLength(originFileName)) {
+            // 处理逻辑：抛出异常、记录日志、返回错误等
+            throw new IllegalArgumentException("文件名超过系统限制");
+        }
         boolean isHtmlView = suffix.equalsIgnoreCase("xls") || suffix.equalsIgnoreCase("xlsx") || suffix.equalsIgnoreCase("csv") || suffix.equalsIgnoreCase("xlsm") || suffix.equalsIgnoreCase("xlt") || suffix.equalsIgnoreCase("xltm") || suffix.equalsIgnoreCase("et") || suffix.equalsIgnoreCase("ett") || suffix.equalsIgnoreCase("xlam");
         String cacheFilePrefixName = null;
         try {

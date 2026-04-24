@@ -1,0 +1,211 @@
+/* 恢复原始容器宽度 */
+.container {
+    width: auto;
+    max-width: 1200px; /* 限制最大宽度，不要满屏 */
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 面板标题样式 */
+.panel-heading {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 6px 6px 0 0;
+}
+
+.panel-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.panel-title a {
+    color: white;
+    text-decoration: none;
+}
+
+.panel-title a:hover {
+    text-decoration: underline;
+    opacity: 0.9;
+}
+
+/* 分页容器样式 */
+.black {
+    margin: 10px 0;
+    text-align: center;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    padding: 10px;
+}
+
+/* 分页按钮基础样式 */
+.black button {
+    margin: 0 5px;
+    padding: 6px 16px;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    background: #007bff;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* 分页按钮悬停效果 */
+.black button:hover {
+    background: #0056b3;
+    border-color: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 分页按钮激活状态 */
+.black button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* 分页信息文字 */
+.black span {
+    margin: 0 10px;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+/* 输入框样式 */
+.black input[type="number"] {
+    width: 70px;
+    padding: 5px 8px;
+    margin: 0 5px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    text-align: center;
+    max-width: 80px;
+}
+
+.black input[type="number"]:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* 内容容器样式 - 防止内容超出边界 */
+#divContent {
+    width: 100%;
+    overflow-x: auto; /* 水平方向如果超出则显示滚动条 */
+    word-wrap: break-word; /* 长单词换行 */
+    word-break: break-word; /* 更智能的断词 */
+    white-space: pre-wrap; /* 保留空白符，但允许换行 */
+    font-family: 'Courier New', monospace; /* 等宽字体 */
+    line-height: 1.5;
+    padding: 15px;
+    background-color: #f8f9fa; /* 保留第二个代码块的底色 */
+    border-radius: 5px;
+    margin: 10px 0;
+    box-sizing: border-box; /* 确保padding不会增加总宽度 */
+    border: 1px solid #e9ecef;
+}
+
+/* 代码块样式 */
+#divContent pre {
+    margin: 15px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border-left: 4px solid #007bff;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+#divContent code {
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
+    font-size: 14px;
+    color: #e83e8c;
+}
+
+/* 行号样式 */
+.line {
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap; /* 允许换行 */
+    word-wrap: break-word;
+    word-break: break-word;
+    margin-bottom: 2px;
+    width: 100%;
+    overflow-wrap: break-word;
+}
+
+.line-number {
+    color: #666; /* 保留第二个代码块的行号颜色 */
+    display: inline-block;
+    width: 50px;
+    text-align: right;
+    margin-right: 10px;
+    vertical-align: top;
+    font-size: 14px;
+    user-select: none;
+}
+
+.line-content {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-word;
+    display: inline-block;
+    vertical-align: top;
+    max-width: calc(100% - 70px); /* 减去行号宽度 */
+}
+
+/* 高亮搜索关键词 - 保留第二个代码块的样式 */
+.highlight {
+    background-color: #ffeb3b; /* 保留第二个代码块的高亮颜色 */
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+/* 确保pre和code标签也正确处理换行 */
+pre, code {
+    white-space: pre-wrap !important; /* 使用!important覆盖可能的内联样式 */
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow-x: auto;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .black {
+        padding: 8px 0;
+    }
+    
+    .black button {
+        padding: 5px 12px;
+        margin: 2px;
+        font-size: 13px;
+    }
+    
+    .black input[type="number"] {
+        width: 60px;
+        margin: 2px;
+    }
+    
+    #divContent {
+        font-size: 14px;
+        padding: 10px;
+    }
+    
+    .line-number {
+        width: 40px;
+        font-size: 12px;
+    }
+    
+    .line-content {
+        max-width: calc(100% - 60px); /* 小屏幕调整 */
+    }
+}

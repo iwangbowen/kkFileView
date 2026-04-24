@@ -54,10 +54,11 @@
         <script src="dcm/index.umd.js"></script>
 
         <script>
-          var url = '${finalUrl}';
+       var url = '${finalUrl}';
+	var kkagent = '${kkagent}';
     var baseUrl = '${baseUrl}'.endsWith('/') ? '${baseUrl}' : '${baseUrl}' + '/';
-    if (!url.startsWith(baseUrl)) {
-        url = baseUrl + 'getCorsFile?urlPath=' + encodeURIComponent(Base64.encode(url));
+    if (kkagent === 'true' || !url.startsWith(baseUrl)) {
+        url = baseUrl + 'getCorsFile?urlPath=' + encodeURIComponent(Base64.encode(url))+ "&key=${kkkey}";
     }
             "use strict";
          

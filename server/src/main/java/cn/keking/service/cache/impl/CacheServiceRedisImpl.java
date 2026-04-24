@@ -1,11 +1,9 @@
 package cn.keking.service.cache.impl;
 
 import cn.keking.service.cache.CacheService;
-import org.redisson.Redisson;
 import org.redisson.api.RBlockingQueue;
 import org.redisson.api.RMapCache;
 import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Service;
 
@@ -23,8 +21,9 @@ public class CacheServiceRedisImpl implements CacheService {
 
     private final RedissonClient redissonClient;
 
-    public CacheServiceRedisImpl(Config config) {
-        this.redissonClient = Redisson.create(config);
+    // 直接注入 Spring 容器中的 RedissonClient Bean
+    public CacheServiceRedisImpl(RedissonClient redissonClient) {
+        this.redissonClient = redissonClient;
     }
 
     @Override
