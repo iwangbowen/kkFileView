@@ -5,8 +5,10 @@
 ## Docker 镜像版本
 
 > Docker 镜像发布于 [wangbowen/kkfileview - Docker Hub](https://hub.docker.com/repository/docker/wangbowen/kkfileview)
+>
+> 💡 升级前建议先查看对应版本的上游 Release Notes，了解功能变化与破坏性更新。
 
-- `kkfileview:5.0.0`（5.0.0）
+- `kkfileview:5.0.0`（5.0.0，基于上游 [v5.0.0 Release](https://github.com/kekingcn/kkFileView/releases/tag/v5.0.0)）
   - **同步上游 5.0.0 重构**：合并 [kekingcn/kkFileView](https://github.com/kekingcn/kkFileView) 5.0.0 的主要更新，包括 Office 异步转换、转换状态跟踪、新版 HTTP 客户端（`CloseableHttpClient`）、**MIME 类型安全校验**、FTP 端口参数、`file://` 协议支持，以及 pptm / heif 等新格式、cadviewer 转换等。
   - **保留本分支 MD5 内容去重**：`DownloadUtils` 采用手动融合策略，在上游新下载流程基础上继续执行「UUID 临时文件下载 → MD5 重命名 → 相同内容复用缓存」逻辑，不同 URL 同内容的文件仍然共享缓存。
   - **保留本分支镜像定制**：基础镜像继续使用本地构建的 `kkfileview-base:latest`（Ubuntu 24.04 + 清华源 + 本地 LibreOffice 25.8.2 deb + 中文字体），启动入口保留动态定位 LibreOffice Python 路径的逻辑。
