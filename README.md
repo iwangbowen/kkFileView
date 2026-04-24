@@ -6,6 +6,11 @@
 
 > Docker 镜像发布于 [wangbowen/kkfileview - Docker Hub](https://hub.docker.com/repository/docker/wangbowen/kkfileview)
 
+- `kkfileview:5.0.0`（5.0.0）
+  - **同步上游 5.0.0 重构**：合并 [kekingcn/kkFileView](https://github.com/kekingcn/kkFileView) 5.0.0 的主要更新，包括 Office 异步转换、转换状态跟踪、新版 HTTP 客户端（`CloseableHttpClient`）、**MIME 类型安全校验**、FTP 端口参数、`file://` 协议支持，以及 pptm / heif 等新格式、cadviewer 转换等。
+  - **保留本分支 MD5 内容去重**：`DownloadUtils` 采用手动融合策略，在上游新下载流程基础上继续执行「UUID 临时文件下载 → MD5 重命名 → 相同内容复用缓存」逻辑，不同 URL 同内容的文件仍然共享缓存。
+  - **保留本分支镜像定制**：基础镜像继续使用本地构建的 `kkfileview-base:latest`（Ubuntu 24.04 + 清华源 + 本地 LibreOffice 25.8.2 deb + 中文字体），启动入口保留动态定位 LibreOffice Python 路径的逻辑。
+  - 新增 `/opt/libreoffice26.2`、`/opt/libreoffice26.8` 到 Linux 默认搜索路径。
 - `kkfileview:4.4.5`（4.4.5）
   - **修复Docker镜像Office转换噪声日志**：针对 LibreOffice 25.8 转换时出现 `Could not find platform independent libraries <prefix>` / `<exec_prefix>` 的问题，启动时自动定位并注入 LibreOffice 内置 Python 路径，转换与预览稳定且日志更干净。
   - **感谢反馈与贡献**：感谢 [Issue #7](https://github.com/iwangbowen/kkFileView/issues/7) 的提出与协助，特别感谢 **[AnakinSkyW](https://github.com/AnakinSkyW)**。
@@ -16,26 +21,31 @@
 - `kkfileview:4.4.2`（4.4.2）
   - 新增 LibreOffice 版本支持，解决 4.4.0 的 docker 版本转换带有批注的 docx 文件时失败，参考 [4.4.0 的 docker 版本转换带有批注的 docx 文件时失败](https://github.com/kekingcn/kkFileView/issues/682)。
 
-## 本分支特别说明
-
-本分支用于解决LibreOffice版本造成的[预览问题](https://github.com/kekingcn/kkFileView/issues/596)。
+## Docker 镜像发布操作说明
 
 ```bash
-# 构建kkfileview-base镜像
+# 1. 构建 kkfileview-base 基础镜像（Ubuntu 24.04 + 本地 LibreOffice + 中文字体）
 cd docker/kkfileview-base
 docker build -t kkfileview-base:latest .
 
-# 构建jar文件
-cd server
+# 2. 构建 jar 包
+cd ../../server
 mvn clean package -DskipTests
 
-# 在项目根目录构建kkfileview镜像
-docker build -t kkfileview:4.4.5 .
+# 3. 在项目根目录构建 kkfileview 应用镜像
+cd ..
+docker build -t kkfileview:5.0.0 .
 
-# 上传到docker hub
-docker tag kkfileview:4.4.5 wangbowen/kkfileview:4.4.5
-docker push wangbowen/kkfileview:4.4.5
+# 4. 打标签并推送到 Docker Hub
+docker tag kkfileview:5.0.0 wangbowen/kkfileview:5.0.0
+docker push wangbowen/kkfileview:5.0.0
+
+# 5. 同时推送 latest 标签，方便无版本拉取
+docker tag kkfileview:5.0.0 wangbowen/kkfileview:latest
+docker push wangbowen/kkfileview:latest
 ```
+
+> 每次发布新版本时，请同步更新上方「Docker 镜像版本」列表中的条目与说明。
 
 文档在线预览项目解决方案，项目使用流行的spring boot搭建，易上手和部署。万能的文件预览开源项目，基本支持主流文档格式预览，如：
 1. 支持 doc, docx, xls, xlsx, xlsm, ppt, pptx, csv, tsv, dotm, xlt, xltm, dot, dotx,xlam, xla ,pages ,pptm 等 Office 办公文档
@@ -89,81 +99,81 @@ docker push wangbowen/kkfileview:4.4.5
 
 ### 文档预览效果
 #### 1. 文本预览
-支持所有类型的文本文档预览， 由于文本文档类型过多，无法全部枚举，默认开启的类型如下 txt,html,htm,asp,jsp,xml,xbrl,json,properties,md,gitignore,log,java,py,c,cpp,sql,sh,bat,m,bas,prg,cmd  
-文本预览效果如下  
-![文本预览效果如下](./doc/img/preview/preview-text.png)      
+支持所有类型的文本文档预览， 由于文本文档类型过多，无法全部枚举，默认开启的类型如下 txt,html,htm,asp,jsp,xml,xbrl,json,properties,md,gitignore,log,java,py,c,cpp,sql,sh,bat,m,bas,prg,cmd
+文本预览效果如下
+![文本预览效果如下](./doc/img/preview/preview-text.png)
 
 #### 2. 图片预览
-支持jpg，jpeg，png，gif等图片预览（翻转，缩放，镜像），预览效果如下  
-![图片预览](./doc/img/preview/preview-image.png)  
+支持jpg，jpeg，png，gif等图片预览（翻转，缩放，镜像），预览效果如下
+![图片预览](./doc/img/preview/preview-image.png)
 
 #### 3. word文档预览
-支持doc，docx文档预览，word预览有两种模式：一种是每页word转为图片预览，另一种是整个word文档转成pdf，再预览pdf。两种模式的适用场景如下  
+支持doc，docx文档预览，word预览有两种模式：一种是每页word转为图片预览，另一种是整个word文档转成pdf，再预览pdf。两种模式的适用场景如下
 * 图片预览：word文件大，前台加载整个pdf过慢
 * pdf预览：内网访问，加载pdf快
-图片预览模式预览效果如下  
-![word文档预览1](./doc/img/preview/preview-doc-image.png)  
-pdf预览模式预览效果如下  
-![word文档预览2](./doc/img/preview/preview-doc-pdf.png)  
+图片预览模式预览效果如下
+![word文档预览1](./doc/img/preview/preview-doc-image.png)
+pdf预览模式预览效果如下
+![word文档预览2](./doc/img/preview/preview-doc-pdf.png)
 
 #### 4. ppt文档预览
-支持ppt，pptx文档预览，和word文档一样，有两种预览模式  
-图片预览模式预览效果如下  
-![ppt文档预览1](./doc/img/preview/preview-ppt-image.png)  
-pdf预览模式预览效果如下  
-![ppt文档预览2](./doc/img/preview/preview-ppt-pdf.png)  
+支持ppt，pptx文档预览，和word文档一样，有两种预览模式
+图片预览模式预览效果如下
+![ppt文档预览1](./doc/img/preview/preview-ppt-image.png)
+pdf预览模式预览效果如下
+![ppt文档预览2](./doc/img/preview/preview-ppt-pdf.png)
 
 #### 5. pdf文档预览
-支持pdf文档预览，和word文档一样，有两种预览模式   
-图片预览模式预览效果如下  
-![pdf文档预览1](./doc/img/preview/preview-pdf-image.png)  
-pdf预览模式预览效果如下   
-![pdf文档预览2](./doc/img/preview/preview-pdf-pdf.png)    
+支持pdf文档预览，和word文档一样，有两种预览模式
+图片预览模式预览效果如下
+![pdf文档预览1](./doc/img/preview/preview-pdf-image.png)
+pdf预览模式预览效果如下
+![pdf文档预览2](./doc/img/preview/preview-pdf-pdf.png)
 
 #### 6. excel文档预览
-支持xls，xlsx文档预览，预览效果如下  
-![excel文档预览](./doc/img/preview/preview-xls.png)  
+支持xls，xlsx文档预览，预览效果如下
+![excel文档预览](./doc/img/preview/preview-xls.png)
 
 #### 7. 压缩文件预览
-支持zip,rar,jar,tar,gzip等压缩包，预览效果如下  
-![压缩文件预览1](./doc/img/preview/preview-zip.png)  
-可点击压缩包中的文件名，直接预览文件，预览效果如下  
-![压缩文件预览2](./doc/img/preview/preview-zip-inner.png)  
+支持zip,rar,jar,tar,gzip等压缩包，预览效果如下
+![压缩文件预览1](./doc/img/preview/preview-zip.png)
+可点击压缩包中的文件名，直接预览文件，预览效果如下
+![压缩文件预览2](./doc/img/preview/preview-zip-inner.png)
 
 #### 8. 多媒体文件预览
-理论上支持所有的视频、音频文件，由于无法枚举所有文件格式，默认开启的类型如下  
-mp3,wav,mp4,flv  
-视频预览效果如下  
-![多媒体文件预览1](./doc/img/preview/preview-video.png)  
-音频预览效果如下  
-![多媒体文件预览2](./doc/img/preview/preview-audio.png)  
+理论上支持所有的视频、音频文件，由于无法枚举所有文件格式，默认开启的类型如下
+mp3,wav,mp4,flv
+视频预览效果如下
+![多媒体文件预览1](./doc/img/preview/preview-video.png)
+音频预览效果如下
+![多媒体文件预览2](./doc/img/preview/preview-audio.png)
 
 #### 9. CAD文档预览
-支持CAD dwg文档预览，和word文档一样，有两种预览模式  
-图片预览模式预览效果如下  
-![cad文档预览1](./doc/img/preview/preview-cad-image.png)  
-pdf预览模式预览效果如下  
+支持CAD dwg文档预览，和word文档一样，有两种预览模式
+图片预览模式预览效果如下
+![cad文档预览1](./doc/img/preview/preview-cad-image.png)
+pdf预览模式预览效果如下
 ![cad文档预览2](./doc/img/preview/preview-cad-pdf.png)
 
 #### 10. Excel文件纯前端渲染效果
 
-![Excel文件纯前端渲染效果](./doc/img/preview/preview-xlsx-web.png)  
+![Excel文件纯前端渲染效果](./doc/img/preview/preview-xlsx-web.png)
 
 #### 11. 流程图bpmn文件预览效果
 
-![流程图bpmn文件预览效果](./doc/img/preview/preview-bpmn.png)  
+![流程图bpmn文件预览效果](./doc/img/preview/preview-bpmn.png)
 
 #### 12. 3D模型文件预览效果：
 
-![3D模型文件预览效果](./doc/img/preview/preview-3ds.png)  
+![3D模型文件预览效果](./doc/img/preview/preview-3ds.png)
 
 #### 13. dcm医疗数位影像文件预览效果：
 
-![dcm医疗数位影像文件预览效果](./doc/img/preview/preview-dcm.png) 
+![dcm医疗数位影像文件预览效果](./doc/img/preview/preview-dcm.png)
 
 #### 14. drawio流程图预览效果：
 
-![drawio流程图预览效果](./doc/img/preview/preview-drawio.png) 
+![drawio流程图预览效果](./doc/img/preview/preview-drawio.png)
 
 考虑说明篇幅原因，就不贴其他格式文件的预览效果了，感兴趣的可以参考下面的实例搭建下
 
@@ -171,7 +181,7 @@ pdf预览模式预览效果如下
 > 项目使用技术
 - spring boot： [spring boot开发参考指南](http://www.kailing.pub/PdfReader/web/viewer.html?file=springboot)
 - freemarker
-- redisson 
+- redisson
 - jodconverter
 
 > 依赖外部环境
@@ -182,7 +192,7 @@ pdf预览模式预览效果如下
 
 3. 第二步：运行 ServerMain 的 main 方法，服务启动后，访问 http://localhost:8012/
 会看到如下界面，代表服务启动成功
-   
+
 ![输入图片说明](https://gitee.com/uploads/images/2017/1213/100221_ea15202e_492218.png "屏幕截图.png")
 
 ### 历史更新记录
@@ -292,7 +302,7 @@ pdf预览模式预览效果如下
 #### > 2023年07月05日，v4.3.0 版本发布 ：
 
 #### 新增功能:
-1. 新增dcm等医疗数位影像预 
+1. 新增dcm等医疗数位影像预
 2. 新增drawio绘图预览
 3. 新增开启缓存的情况下重新生成的命令 &forceUpdatedCache=true
 4. 新增dwg CAD文件预览
@@ -300,7 +310,7 @@ pdf预览模式预览效果如下
 6. 新增PDF文件生成图片的dpi自定义配置
 7. 新增删除转换后OFFICE、CAD、TIFF、压缩包源文件配置 默认开启 节约磁盘空间
 8. 新增前端解析xlsx方法
-9. 新增pages,eps, iges , igs, dwt, dng, ifc, dwfx, stl, cf2, plt等格式支持 
+9. 新增pages,eps, iges , igs, dwt, dng, ifc, dwfx, stl, cf2, plt等格式支持
 
 #### 优化:
 1. 调整生成的PDF文件 文件名称添加文件后缀 防止生成同名文件
@@ -322,7 +332,7 @@ pdf预览模式预览效果如下
 
 #### 更新日志:
 
-1. 修复 dwg 文件预览报空指针的 bug  
+1. 修复 dwg 文件预览报空指针的 bug
 
 #### > 2023年04月13日，v4.2.0 版本发布 ：
 
@@ -338,7 +348,7 @@ pdf预览模式预览效果如下
 9. 新增 obj, 3ds, stl, ply, gltf, glb, off, 3dm, fbx, dae, wrl, 3mf, ifc, brep, step, iges, fcstd, bim 等 3D 模型文件预览支持
 10. 新增可配置限制高风险文件上传的功能，比如 exe 文件
 11. 新增可配置站点的备案信息
-12. 新增演示站点删除文件需要密码的功能  
+12. 新增演示站点删除文件需要密码的功能
 
 #### 优化:
 1. 文本文档预览加入缓存
@@ -366,7 +376,7 @@ pdf预览模式预览效果如下
 
 #### > 2022年12月14日，v4.1.0 版本发布 ：
 
-1. 全新首页视觉 @wsd7747 
+1. 全新首页视觉 @wsd7747
 2. tif图片预览兼容多页tif的pdf转换、jpg转换，以及jpg在线多页预览功能 @zhangzhen1979
 3. 优化docker构建方案，使用分层构建方式 @yl-yue
 4. 实现基于userToken缓存加密文件 @yl-yue
@@ -432,7 +442,7 @@ ofd 类型文件支持版本，本次版本重要功能均由社区开发贡献�
 7. 新增配置项office.preview.switch.disabled，控制offic文件预览切换开关
 8. 优化文本类型文件预览逻辑，采用Base64传输内容，避免预览时再次请求文件内容
 9. office预览图片模式禁用图片放大效果，达到图片和pdf预览效果一致的体验
-10. 直接代码静态设置pdfbox兼容低版本jdk，在IDEA中运行也不会有警告提示 
+10. 直接代码静态设置pdfbox兼容低版本jdk，在IDEA中运行也不会有警告提示
 11. 移除guava、hutool等非必须的工具包，减少代码体积
 12. Office组件加载异步化，提速应用启动速度最快到5秒内
 13. 合理设置预览消费队列的线程数
@@ -470,7 +480,7 @@ ofd 类型文件支持版本，本次版本重要功能均由社区开发贡献�
 #### > 2018年01月19日 ：
 
 1. 大文件入队提前处理
-1. 新增addTask文件转换入队接口 
+1. 新增addTask文件转换入队接口
 1. 采用redis队列，支持kkFIleView接口和异构系统入队两种方式
 
 #### > 2018年01月17日 ：
@@ -482,27 +492,27 @@ ofd 类型文件支持版本，本次版本重要功能均由社区开发贡献�
 
 #### > 2018年01月12日 ：
 
-1. 新增多图片同时预览 
+1. 新增多图片同时预览
 1. 支持压缩包内图片轮番预览
 
-#### > 2018年01月02日 ： 
+#### > 2018年01月02日 ：
 
-1. 修复txt等文本编码问题导致预览乱码 
-1. 修复项目模块依赖引入不到的问题 
-1. 新增spring boot profile，支持多环境配置 
+1. 修复txt等文本编码问题导致预览乱码
+1. 修复项目模块依赖引入不到的问题
+1. 新增spring boot profile，支持多环境配置
 1. 引入pdf.js预览doc等文件，支持doc标题生成pdf预览菜单，支持手机端预览
 
 
 ### 关于引用
-ofd    引用于 [ofdview ](https://gitee.com/cnofd/ofdview ) 开源协议 Apache-2.0  
-CAD    引用于 aspose-cad 测试版本 商用请自行购买  
-xmind  引用于 [ xmind-embed-viewer](https://github.com/xmindltd/xmind-embed-viewer) 开源协议 MIT  
-epub   引用于 [ epub.js](https://github.com/futurepress/epub.js) 开源协议 BSD许可证  
-压缩包 引用于 [sevenzipjbinding](https://github.com/borisbrodski/sevenzipjbinding )开源协议LGPL  
-3D     引用于 [Online3DViewer](https://github.com/kovacsv/Online3DViewer )开源协议MIT  
-drawio 引用于 [drawio](https://github.com/jgraph/drawio )开源协议 Apache-2.0  
-bpmn流程图     引用于 [bpmn-js](https://github.com/bpmn-io/bpmn-js ) 自定义协议 保留水印 具体自行查看  
-dcm医疗数位影像  引用于 [dcmjs](https://github.com/dcmjs-org/dcmjs )开源协议MIT  
+ofd    引用于 [ofdview ](https://gitee.com/cnofd/ofdview ) 开源协议 Apache-2.0
+CAD    引用于 aspose-cad 测试版本 商用请自行购买
+xmind  引用于 [ xmind-embed-viewer](https://github.com/xmindltd/xmind-embed-viewer) 开源协议 MIT
+epub   引用于 [ epub.js](https://github.com/futurepress/epub.js) 开源协议 BSD许可证
+压缩包 引用于 [sevenzipjbinding](https://github.com/borisbrodski/sevenzipjbinding )开源协议LGPL
+3D     引用于 [Online3DViewer](https://github.com/kovacsv/Online3DViewer )开源协议MIT
+drawio 引用于 [drawio](https://github.com/jgraph/drawio )开源协议 Apache-2.0
+bpmn流程图     引用于 [bpmn-js](https://github.com/bpmn-io/bpmn-js ) 自定义协议 保留水印 具体自行查看
+dcm医疗数位影像  引用于 [dcmjs](https://github.com/dcmjs-org/dcmjs )开源协议MIT
 
 ### 使用登记
 如果这个项目解决了你的实际问题，可在 https://gitee.com/kekingcn/file-online-preview/issues/IGSBV
