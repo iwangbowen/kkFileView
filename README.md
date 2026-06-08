@@ -8,6 +8,16 @@
 >
 > 💡 升级前建议先查看对应版本的上游 Release Notes，了解功能变化与破坏性更新。
 
+- `kkfileview:5.1.0`（5.1.0，同步上游 master 最新代码）
+  - **同步上游最新 PR**：合并上游 master 分支 12 个提交，主要更新包括：
+    - **PDF.js 升级与重构**：升级 PDF.js 版本，去掉 jQuery 依赖，内置水印脚本，修复 PDF 无法打印及打印水印问题（[#746](https://github.com/kekingcn/kkFileView/pull/746)）
+    - **PDF 功能增强**：支持 PDF 侧边栏默认展开配置（[#755](https://github.com/kekingcn/kkFileView/pull/755)）、跨域功能、页码和高亮修复
+    - **Redis 配置统一**：统一单机、集群、主从、哨兵模式的配置参数（retryAttempts, retryInterval, timeout 等），地址自动补齐 `redis://` 前缀（[#751](https://github.com/kekingcn/kkFileView/pull/751)）
+    - **反代路径修复**：修复反向代理后绝对路径错误问题
+    - **水印与高亮修复**：修复特殊符号导致水印和高亮解析失败
+    - **xlsx 修复**：修复 LuckyExcel 解析数据校验时 matchType 未映射导致的崩溃（[#730](https://github.com/kekingcn/kkFileView/pull/730)）
+    - **HTTP 错误优化**：区分 HTTP 错误码，返回明确错误原因（[#752](https://github.com/kekingcn/kkFileView/pull/752)）
+  - **保留本分支特性**：MD5 内容去重缓存、本地 kkfileview-base 基础镜像（Ubuntu 24.04 + 清华源 + LibreOffice + 中文字体）、动态定位 LibreOffice Python 路径。
 - `kkfileview:5.0.0`（5.0.0，基于上游 [v5.0.0 Release](https://github.com/kekingcn/kkFileView/releases/tag/v5.0.0)）
   - **同步上游 5.0.0 重构**：合并 [kekingcn/kkFileView](https://github.com/kekingcn/kkFileView) 5.0.0 的主要更新，包括 Office 异步转换、转换状态跟踪、新版 HTTP 客户端（`CloseableHttpClient`）、**MIME 类型安全校验**、FTP 端口参数、`file://` 协议支持，以及 pptm / heif 等新格式、cadviewer 转换等。
   - **保留本分支 MD5 内容去重**：`DownloadUtils` 采用手动融合策略，在上游新下载流程基础上继续执行「UUID 临时文件下载 → MD5 重命名 → 相同内容复用缓存」逻辑，不同 URL 同内容的文件仍然共享缓存。
@@ -36,14 +46,14 @@ mvn clean package -DskipTests
 
 # 3. 在项目根目录构建 kkfileview 应用镜像
 cd ..
-docker build -t kkfileview:5.0.0 .
+docker build -t kkfileview:5.1.0 .
 
 # 4. 打标签并推送到 Docker Hub
-docker tag kkfileview:5.0.0 wangbowen/kkfileview:5.0.0
-docker push wangbowen/kkfileview:5.0.0
+docker tag kkfileview:5.1.0 wangbowen/kkfileview:5.1.0
+docker push wangbowen/kkfileview:5.1.0
 
 # 5. 同时推送 latest 标签，方便无版本拉取
-docker tag kkfileview:5.0.0 wangbowen/kkfileview:latest
+docker tag kkfileview:5.1.0 wangbowen/kkfileview:latest
 docker push wangbowen/kkfileview:latest
 ```
 
