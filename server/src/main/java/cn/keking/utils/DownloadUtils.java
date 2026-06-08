@@ -8,6 +8,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,9 +62,8 @@ public class DownloadUtils {
         }
         ReturnResponse<String> response = new ReturnResponse<>(0, "下载成功!!!", "");
         String realPath = getRelFilePath(fileName, fileAttribute);
-        // 获取文件后缀用于校验
         final String fileSuffix = fileAttribute.getSuffix();
-        // 判断是否非法地址
+
         if (KkFileUtils.isIllegalFileName(realPath)) {
             response.setCode(1);
             response.setContent(null);
@@ -76,13 +76,17 @@ public class DownloadUtils {
             response.setMsg("下载失败:不支持的类型!" + urlStr);
             return response;
         }
-        if (fileAttribute.isCompressFile()) { //压缩包文件 直接赋予路径 不予下载
+        if (fileAttribute.isCompressFile()) {
             response.setContent(fileDir + fileName);
             response.setMsg(fileName);
             return response;
         }
-
-        // 纯 MD5 方案：总是下载到临时文件，下载后再计算 MD5 并复用/重命名
+        // 如果文件是否已经存在、且不强制更新，则直接返回文件路径
+        if (KkFileUtils.isExist(realPath) && !fileAttribute.forceUpdatedCache()) {
+            response.setContent(realPath);
+            response.setMsg(fileName);
+            return response;
+        }
         try {
             URL url = WebUtils.normalizedURL(urlStr);
 
@@ -98,52 +102,39 @@ public class DownloadUtils {
             if (!fileAttribute.getSkipDownLoad()) {
                 if (isHttpUrl(url)) {
                     CloseableHttpClient httpClient = HttpRequestUtils.createConfiguredHttpClient();
-                    final String finalUrlStr = urlStr;
-                    final boolean[] mimeError = {false};
-                    try {
-                        HttpRequestUtils.executeHttpRequest(url, httpClient, fileAttribute, responseWrapper -> {
-                            // 获取响应头中的 Content-Type
-                            String contentType = responseWrapper.getContentType();
+                    String finalUrlStr = urlStr;
 
-                            // 如果是 Office/设计文件，需要校验 MIME 类型
-                            if (WebUtils.isMimeCheckRequired(fileSuffix)) {
-                                if (!WebUtils.isValidMimeType(contentType, fileSuffix)) {
-                                    logger.error("文件类型错误，期望二进制文件但接收到文本类型，url: {}, Content-Type: {}",
-                                            finalUrlStr, contentType);
-                                    responseWrapper.setHasError(true);
-                                    mimeError[0] = true;
-                                    return;
-                                }
+                    final boolean[] hasMimeError = {false};
+                    final String[] mimeErrorMessage = {null};
+
+                    HttpRequestUtils.executeHttpRequest(url, httpClient, fileAttribute, responseWrapper -> {
+                        String contentType = responseWrapper.getContentType();
+                        if (WebUtils.isMimeCheckRequired(fileSuffix)) {
+                            if (!WebUtils.isValidMimeType(contentType, fileSuffix)) {
+                                logger.error("文件类型错误，期望二进制文件但接收到文本类型，url: {}, Content-Type: {}",
+                                        finalUrlStr, contentType);
+                                hasMimeError[0] = true;
+                                mimeErrorMessage[0] = "期望二进制文件但接收到文本类型，Content-Type: " + contentType;
+                                return;
                             }
+                        }
+                        FileUtils.copyToFile(responseWrapper.getInputStream(), tempFile);
+                    });
 
-                            // 保存到临时文件
-                            FileUtils.copyToFile(responseWrapper.getInputStream(), tempFile);
-                        });
-                    } catch (Exception e) {
-                        if (tempFile.exists()) {
-                            tempFile.delete();
-                        }
+                    if (hasMimeError[0]) {
                         response.setCode(1);
                         response.setContent(null);
-                        response.setMsg("下载失败:" + e.getMessage());
+                        response.setMsg(mimeErrorMessage[0]);
                         return response;
                     }
-                    if (mimeError[0]) {
-                        if (tempFile.exists()) {
-                            tempFile.delete();
-                        }
-                        response.setCode(1);
-                        response.setContent(null);
-                        response.setMsg("下载失败:响应内容类型与文件类型不匹配:" + urlStr);
-                        return response;
-                    }
+
                 } else if (isFtpUrl(url)) {
                     String ftpUsername = WebUtils.getUrlParameterReg(fileAttribute.getUrl(), URL_PARAM_FTP_USERNAME);
                     String ftpPassword = WebUtils.getUrlParameterReg(fileAttribute.getUrl(), URL_PARAM_FTP_PASSWORD);
                     String ftpControlEncoding = WebUtils.getUrlParameterReg(fileAttribute.getUrl(), URL_PARAM_FTP_CONTROL_ENCODING);
                     String ftpport = WebUtils.getUrlParameterReg(realPath, URL_PARAM_FTP_PORT);
                     FtpUtils.download(fileAttribute.getUrl(), ftpport, tempFilePath, ftpUsername, ftpPassword, ftpControlEncoding);
-                } else if (isFileUrl(url)) { // 添加对 file 协议的支持
+                } else if (isFileUrl(url)) {
                     handleFileProtocol(url, tempFilePath);
                 } else {
                     response.setCode(1);
@@ -198,6 +189,17 @@ public class DownloadUtils {
             response.setContent(null);
             response.setMsg("文件下载失败：文件不存在");
             return response;
+
+        } catch (HttpClientErrorException e) {
+            logger.error("HTTP请求失败，状态码：{}，url：{}", e.getStatusCode(), urlStr);
+            response.setCode(1);
+            response.setContent(null);
+            if (e.getStatusCode().is4xxClientError()) {
+                response.setMsg("文件不存在或无法访问 (HTTP " + e.getStatusCode() + ")");
+            } else {
+                response.setMsg("下载失败: " + e.getMessage());
+            }
+            return response;
         } catch (IOException | GalimatiasParseException e) {
             logger.error("文件下载失败，url：{}", urlStr);
             response.setCode(1);
@@ -209,7 +211,11 @@ public class DownloadUtils {
             }
             return response;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            logger.error("下载文件时发生未知异常，url：{}", urlStr, e);
+            response.setCode(1);
+            response.setContent(null);
+            response.setMsg("下载失败: " + e.getMessage());
+            return response;
         }
     }
 

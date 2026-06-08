@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.client.HttpClientErrorException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -152,34 +154,71 @@ public class OnlinePreviewController {
         // 1. 验证接口是否开启
         if (!ConfigConstants.getGetCorsFile()) {
             logger.info("接口关闭，禁止访问!，url：{}", urlPath);
+            try {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "接口已关闭");
+            } catch (IOException ignored) {}
             return;
         }
-        //2. 验证访问权限
+        // 2. 验证访问权限
         if (WebUtils.validateKey(key)) {
             logger.info("访问不合法：访问密码不正确!，url：{}", urlPath);
+            try {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "访问密码不正确");
+            } catch (IOException ignored) {}
             return;
         }
+
         URL url;
         try {
             urlPath = WebUtils.decodeUrl(urlPath, encryption);
             url = WebUtils.normalizedURL(urlPath);
         } catch (Exception ex) {
-            logger.error(String.format(BASE64_DECODE_ERROR_MSG, urlPath),ex);
+            logger.error(String.format(BASE64_DECODE_ERROR_MSG, urlPath), ex);
+            try {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "URL 解析失败");
+            } catch (IOException ignored) {}
             return;
         }
+
         assert urlPath != null;
         if (!isHttpUrl(url) && !isFtpUrl(url)) {
             logger.info("读取跨域文件异常，可能存在非法访问，urlPath：{}", urlPath);
+            try {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "不支持的协议");
+            } catch (IOException ignored) {}
             return;
         }
-        FileAttribute fileAttribute = fileHandlerService.getFileAttribute(urlPath, req);
-        InputStream inputStream = null;
-        logger.info("读取跨域文件url：{}", urlPath);
-        if (!isFtpUrl(url)) {
-            CloseableHttpClient httpClient = HttpRequestUtils.createConfiguredHttpClient();
 
-            HttpRequestUtils.executeHttpRequest(url, httpClient, fileAttribute, responseWrapper -> IOUtils.copy(responseWrapper.getInputStream(), response.getOutputStream()));
+        FileAttribute fileAttribute = fileHandlerService.getFileAttribute(urlPath, req);
+        logger.info("读取跨域文件url：{}", urlPath);
+
+        if (!isFtpUrl(url)) {
+            // HTTP/HTTPS 处理（修复：不关闭共享的 CloseableHttpClient）
+            CloseableHttpClient httpClient = HttpRequestUtils.createConfiguredHttpClient();
+            try {
+                HttpRequestUtils.executeHttpRequest(url, httpClient, fileAttribute, responseWrapper -> IOUtils.copy(responseWrapper.getInputStream(), response.getOutputStream()));
+            } catch (HttpClientErrorException e) {
+                // 捕获 HTTP 4xx 错误（如 404）
+                logger.error("HTTP 请求失败，状态码：{}，url：{}", e.getStatusCode(), urlPath);
+                try {
+                    if (e.getStatusCode().is4xxClientError()) {
+                        response.sendError(e.getStatusCode().value(), "文件不存在或无法访问");
+                    } else {
+                        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "下载文件时发生错误");
+                    }
+                } catch (IOException ignored) {
+                }
+            } catch (Exception e) {
+                // 捕获其他异常（如连接超时、IO 异常等）
+                logger.error("读取跨域文件异常，url：{}", urlPath, e);
+                try {
+                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "读取文件失败: " + e.getMessage());
+                } catch (IOException ignored) {
+                }
+            }
         } else {
+            // FTP 处理
+            InputStream inputStream = null;
             try {
                 String filename = urlPath.substring(urlPath.lastIndexOf('/') + 1);
                 String contentType = WebUtils.getContentTypeByFilename(filename);
@@ -190,10 +229,23 @@ public class OnlinePreviewController {
                 String ftpPassword = WebUtils.getUrlParameterReg(urlPath, URL_PARAM_FTP_PASSWORD);
                 String ftpControlEncoding = WebUtils.getUrlParameterReg(urlPath, URL_PARAM_FTP_CONTROL_ENCODING);
                 String support = WebUtils.getUrlParameterReg(urlPath, URL_PARAM_FTP_PORT);
-                inputStream=  FtpUtils.preview(urlPath,support, urlPath, ftpUsername, ftpPassword, ftpControlEncoding);
+                inputStream = FtpUtils.preview(urlPath, support, urlPath, ftpUsername, ftpPassword, ftpControlEncoding);
                 IOUtils.copy(inputStream, response.getOutputStream());
             } catch (IOException e) {
-                logger.error("读取跨域文件异常，url：{}", urlPath);
+                logger.error("读取跨域文件异常，url：{}", urlPath, e);
+                try {
+                    // 根据异常信息判断是否为文件不存在
+                    if (e.getMessage() != null && (e.getMessage().contains("550") || e.getMessage().contains("File not found"))) {
+                        response.sendError(HttpServletResponse.SC_NOT_FOUND, "FTP 文件不存在");
+                    } else {
+                        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "FTP 读取失败");
+                    }
+                } catch (IOException ignored) {}
+            } catch (Exception e) {
+                logger.error("FTP 预览发生未知异常，url：{}", urlPath, e);
+                try {
+                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "FTP 服务异常");
+                } catch (IOException ignored) {}
             } finally {
                 IOUtils.closeQuietly(inputStream);
             }

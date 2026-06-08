@@ -9,6 +9,83 @@ if (kkpdfAutoFetch == "true") {
 } else {
     kkpdfAutoFetch = false
 }
+
+function isNotEmpty(value) {
+  return value !== null && value !== undefined && value !== '' && value !== 'false' ;
+}
+/**
+ * 通用水印生成函数
+ * @param {HTMLElement} container   - 水印容器（相对定位的父元素）
+ * @param {string} watermarkTxt     - 水印文字
+ * @param {number} [explicitWidth]  - 可选：显式指定容器宽度（px），不传则自动获取
+ * @param {number} [explicitHeight] - 可选：显式指定容器高度（px），不传则自动获取
+ */
+function addWatermark(container, watermarkTxt, explicitWidth = null, explicitHeight = null) {
+    if (!isNotEmpty(watermarkTxt)) return;
+
+    // 公共配置
+    const settings = {
+        start_x: 80,
+        start_y: 80,
+        x_space: 80,
+        y_space: 80,
+        color: 'black',
+        alpha: 0.2,
+        fontsize: '18px',
+        font: '微软雅黑',
+        width: 200,
+        height: 80,
+        angle: 30
+    };
+
+    // 确定实际使用的宽高
+    let pageWidth, pageHeight;
+    if (explicitWidth !== null && explicitHeight !== null) {
+        pageWidth = explicitWidth;
+        pageHeight = explicitHeight;
+    } else {
+        const rect = container.getBoundingClientRect();
+        pageWidth = rect.width;
+        pageHeight = rect.height;
+    }
+
+    let maxX = pageWidth - settings.width;
+    let maxY = pageHeight - settings.height;
+    maxX = Math.max(maxX, 250);
+    maxY = Math.max(maxY, 250);
+
+    const fragment = document.createDocumentFragment();
+    for (let x = settings.start_x; x < maxX; x += settings.x_space) {
+        for (let y = settings.start_y; y < maxY; y += settings.y_space) {
+            const div = document.createElement('div');
+            div.className = 'mask_div';
+            div.appendChild(document.createTextNode(watermarkTxt));
+            div.style.cssText = `
+                filter: progid:DXImageTransform.Microsoft.Alpha(opacity=${settings.alpha * 100});
+                transform: rotate(-${settings.angle}deg);
+                visibility: visible;
+                position: absolute;
+                left: ${x}px;
+                top: ${y}px;
+                overflow: hidden;
+                z-index: 100;
+                pointer-events: none;
+                opacity: ${settings.alpha};
+                font-size: ${settings.fontsize};
+                font-family: ${settings.font};
+                color: ${settings.color};
+                text-align: center;
+                width: ${settings.width}px;
+                height: ${settings.height}px;
+                display: block;
+            `;
+            fragment.appendChild(div);
+        }
+    }
+    container.appendChild(fragment);
+}
+
+
 /******/ var __webpack_modules__ = ({
 
 /***/ 34:
@@ -13874,37 +13951,43 @@ class PDFPrintService {
     };
     return new Promise(renderNextPage);
   }
-  useRenderedPage() {
+useRenderedPage() {
     this.throwIfInactive();
     const img = document.createElement("img");
-    this.scratchCanvas.toBlob(blob => {
-      img.src = URL.createObjectURL(blob);
-    });
     const wrapper = document.createElement("div");
     wrapper.className = "printedPage";
+    wrapper.style.position = "relative";
+    
+    // 获取当前页面的尺寸（单位：点，1pt=1/72英寸）
+    const pageSizePt = this.pagesOverview[0];
+    // 转换为 CSS 像素（1pt = 96/72 px）
+    const pageWidthPx = pageSizePt.width * 96 / 72;
+    const pageHeightPx = pageSizePt.height * 96 / 72;
+    
+    // 设置 wrapper 尺寸（CSS 像素）
+    wrapper.style.width = `${pageWidthPx}px`;
+    wrapper.style.height = `${pageHeightPx}px`;
+    wrapper.style.backgroundColor = "white";
+    
+    this.scratchCanvas.toBlob(blob => {
+        img.src = URL.createObjectURL(blob);
+    });
+    
     wrapper.append(img);
-	 var printWatermarkDiv = document.createElement('div');
-    // console.log(pageSize);
-    printWatermarkDiv.style.position = 'absolute';
-    printWatermarkDiv.style.left = '0px';
-    printWatermarkDiv.style.top = '0px';
-    printWatermarkDiv.style.width = '1024px';
-    printWatermarkDiv.style.height = pageSize.height*pageCount+ "px";
-    watermarkObj(printWatermarkDiv,watermarkTxt);
-    wrapper.appendChild(printWatermarkDiv);
     this.printContainer.append(wrapper);
-    const {
-      promise,
-      resolve,
-      reject
-    } = Promise.withResolvers();
-    img.onload = resolve;
+    
+    const { promise, resolve, reject } = Promise.withResolvers();
+    img.onload = () => {
+        // 使用专用函数生成水印，直接传入页面像素尺寸
+        addWatermark(wrapper, watermarkTxt, pageWidthPx, pageHeightPx);
+        resolve();
+    };
     img.onerror = reject;
     promise.catch(() => {}).then(() => {
-      URL.revokeObjectURL(img.src);
+        URL.revokeObjectURL(img.src);
     });
     return promise;
-  }
+}
   performPrint() {
     this.throwIfInactive();
     return new Promise(resolve => {
@@ -17612,7 +17695,7 @@ class PDFPageView extends BasePDFPageView {
         }
       });
     }
-	watermarkObj(div,watermarkTxt);
+	addWatermark(div,watermarkTxt);
     if (!this.annotationLayer && this.#annotationMode !== AnnotationMode.DISABLE) {
       const {
         annotationStorage,
@@ -23083,24 +23166,26 @@ initCom(PDFViewerApplication);
 }
 {
   const HOSTED_VIEWER_ORIGINS = new Set(["null", "http://mozilla.github.io", "https://mozilla.github.io"]);
-  var validateFileURL = function (file) {
-    if (!file) {
-      return;
-    }
-    const viewerOrigin = URL.parse(window.location)?.origin || "null";
-    if (HOSTED_VIEWER_ORIGINS.has(viewerOrigin)) {
-      return;
-    }
-    const fileOrigin = URL.parse(file, window.location)?.origin;
-    if (fileOrigin === viewerOrigin) {
-      return;
-    }
-    const ex = new Error("file origin does not match viewer's");
-    PDFViewerApplication._documentError("pdfjs-loading-error", {
-      message: ex.message
-    });
-    throw ex;
-  };
+var validateFileURL = function (file) {
+  if (!file) {
+    return;
+  }
+  const viewerOrigin = URL.parse(window.location)?.origin || "null";
+  if (HOSTED_VIEWER_ORIGINS.has(viewerOrigin)) {
+    return;
+  }
+  /* 注释掉跨域检查
+  const fileOrigin = URL.parse(file, window.location)?.origin;
+  if (fileOrigin === viewerOrigin) {
+    return;
+  }
+  const ex = new Error("file origin does not match viewer's");
+  PDFViewerApplication._documentError("pdfjs-loading-error", {
+    message: ex.message
+  });
+  throw ex;
+  */
+};
   var onFileInputChange = function (evt) {
     if (this.pdfViewer?.isInPresentationMode) {
       return;
