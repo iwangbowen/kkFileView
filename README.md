@@ -2,6 +2,10 @@
 
 > **本项目 Fork 自 [kekingcn/kkFileView](https://github.com/kekingcn/kkFileView)**，在原项目基础上进行了部分功能扩展与优化。感谢原作者的开源贡献！如需了解原版功能及文档，请访问原项目仓库。
 
+> 🚀 **本仓库作者的另一个开源项目**：[Zenith Admin](https://github.com/iwangbowen/zenith-admin) —— 基于 **Hono v4 + React 19 + Semi Design v2 + Drizzle ORM** 的全栈后台管理系统，覆盖认证授权、组织权限、系统配置、日志审计、定时任务、文件存储与运行监控等场景，MIT 协议开源。
+>
+> [文档站](https://iwangbowen.github.io/zenith-admin/) · [在线演示](https://iwangbowen.github.io/zenith-admin/demo/)（`admin` / `123456`，纯前端 Mock，无需后端）
+
 ## Docker 镜像版本
 
 > Docker 镜像发布于 [wangbowen/kkfileview - Docker Hub](https://hub.docker.com/repository/docker/wangbowen/kkfileview)
